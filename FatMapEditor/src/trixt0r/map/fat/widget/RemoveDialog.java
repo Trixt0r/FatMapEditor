@@ -1,8 +1,7 @@
 package trixt0r.map.fat.widget;
 
-import trixt0r.map.fat.widget.actions.LayerWidgetActions;
-
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -16,7 +15,7 @@ public class RemoveDialog extends Dialog{
 	
 	Label question;
 	TextButton buttonOk, buttonCancel;
-	LayerWidgetActions.RemoveAction action;
+	Action removeAction;
 
 	public RemoveDialog(String title, Skin skin, Tree tree, String question) {
 		super(title, skin);
@@ -34,7 +33,7 @@ public class RemoveDialog extends Dialog{
 	public void result(Object object){
 		if(this.getColor().a != 1) cancel();
 		if(object == this.question && this.getColor().a == 1)
-			this.action.remove();
+			this.removeAction.act(0);
 	}
 	
 	@Override
@@ -61,7 +60,7 @@ public class RemoveDialog extends Dialog{
 		this.question.validate();
 	}
 	
-	public void setRemoveAction(LayerWidgetActions.RemoveAction action){
-		this.action = action;
+	public void setRemoveAction(Action action){
+		this.removeAction = action;
 	}
 }

@@ -1,6 +1,6 @@
 package trixt0r.map.fat.widget.layer;
 
-import trixt0r.map.fat.widget.actions.LayerWidgetActions;
+import trixt0r.map.fat.widget.layer.actions.LayerWidgetAddLayer;
 
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -10,16 +10,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Tree;
 /**
- * A dialog which let's the user to create a new layer.
+ * A dialog which let's the user create a new layer.
  * @author Trixt0r
  */
 public class NewLayerDialog extends Dialog{
 	
 	public final TextField field;
 	public final TextButton buttonOk, buttonCancel;
+	public Tree tree;
 
 	public NewLayerDialog(String title, Skin skin, Tree tree) {
 		super(title, skin);
+		this.tree = tree;
 		this.field = new TextField("Layer "+(tree.getNodes().size+1), skin);
 		this.buttonOk = new TextButton("Create", skin);
 		this.buttonCancel = new TextButton("Cancel", skin);
@@ -34,7 +36,7 @@ public class NewLayerDialog extends Dialog{
 	public void result(Object object){
 		if(this.getColor().a != 1) cancel();
 		if(object == this.field && this.getColor().a == 1)
-			LayerWidgetActions.addLayerNode(field.getText());
+			new LayerWidgetAddLayer(tree, field.getText()).act(0);
 	}
 	
 	@Override
@@ -49,7 +51,7 @@ public class NewLayerDialog extends Dialog{
 	
 	public Dialog show(Stage stage){
 		super.show(stage);
-		this.field.setText("Layer "+(LayerWidgetActions.layerTree.getNodes().size+1));
+		this.field.setText("Layer "+(tree.getNodes().size+1));
 		this.field.selectAll();
 		stage.setKeyboardFocus(field);
 		return this;

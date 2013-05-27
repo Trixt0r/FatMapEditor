@@ -1,6 +1,7 @@
 package map.fat;
 
-import normal.lighting.Illumination2D;
+
+import trixt0r.map.fat.FatMapEditor;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
@@ -23,7 +24,7 @@ public class Main {
 		cfg.width = 1280;
 		cfg.height = 720;*/
 		
-		app = new LwjglApplication(new Illumination2D(), cfg);
+		app = new LwjglApplication(new FatMapEditor(), cfg);
 	}
 	
 	/*public static void resize(int width, int height){

@@ -1,29 +1,30 @@
 package trixt0r.map.fat.widget.layer;
 
 import trixt0r.map.fat.widget.LabelTextField;
-import trixt0r.map.fat.widget.actions.LayerWidgetActions;
+import trixt0r.map.fat.widget.layer.actions.LayerWidgetAddObject;
+import trixt0r.map.fat.widget.layer.nodes.LayerNode;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Tree.Node;
 
 public class NewLayerObjectDialog extends Dialog {
 	
 	TextButton buttonOk, buttonCancel;
 	LabelTextField name, posX, posY, scaleX, scaleY, angle, alpha;
 	Label lblPosition, lblScale;
-	Node layerNode;
+	LayerNode layerNode;
 
 	public NewLayerObjectDialog(Skin skin) {
 		super("New freeform object", skin);
 
 		this.name = new LabelTextField("Name: ", skin, "newObject");
-		this.posX = new LabelTextField("X: ", skin, 50, "0");
-		this.posY = new LabelTextField("Y: ", skin, 50, "0");
+		this.posX = new LabelTextField("X: ", skin, 50, ""+(Gdx.graphics.getWidth()/2-100));
+		this.posY = new LabelTextField("Y: ", skin, 50, ""+Gdx.graphics.getHeight()/2);
 		this.scaleX = new LabelTextField("X: ", skin, 50, "1");
 		this.scaleY = new LabelTextField("Y: ", skin, 50, "1");
 		this.angle = new LabelTextField("Angle: ", skin, 50, "0");
@@ -51,11 +52,19 @@ public class NewLayerObjectDialog extends Dialog {
 	@Override
 	public void result(Object object){
 		if(this.getColor().a != 1) cancel();
-		if(object == this.name && this.getColor().a == 1)
-			LayerWidgetActions.addLayerObjectNode(this.name.getText(), this.layerNode);
+		if(object == this.name && this.getColor().a == 1){
+			LayerWidgetAddObject dialog = new LayerWidgetAddObject(this.layerNode, this.name.getText());
+			dialog.x = Float.parseFloat(this.posX.getText());
+			dialog.y = Float.parseFloat(this.posY.getText());
+			dialog.xscale = Float.parseFloat(this.scaleX.getText());
+			dialog.yscale = Float.parseFloat(this.scaleY.getText());
+			dialog.alpha = Float.parseFloat(this.alpha.getText()) / 100;
+			dialog.angle = Float.parseFloat(this.angle.getText()) % 360;
+			dialog.act(0);
+		}
 	}
 	
-	public void setLayerNode(Node layerNode){
+	public void setLayerNode(LayerNode layerNode){
 		this.layerNode = layerNode;
 	}
 	
@@ -74,6 +83,8 @@ public class NewLayerObjectDialog extends Dialog {
 		super.show(stage);
 		this.name.field.setText("new Object"+(this.layerNode.getChildren().size));
 		stage.setKeyboardFocus(this.name.field);
+		this.posX.field.setText(""+(Gdx.graphics.getWidth()/2-100));
+		this.posY.field.setText(""+(Gdx.graphics.getHeight()/2));
 		this.name.field.selectAll();
 		this.posX.field.selectAll();
 		this.posY.field.selectAll();

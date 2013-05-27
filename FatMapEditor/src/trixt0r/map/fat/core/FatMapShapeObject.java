@@ -1,11 +1,17 @@
 package trixt0r.map.fat.core;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.CircleMapObject;
 import com.badlogic.gdx.maps.objects.EllipseMapObject;
 import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.PolylineMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Ellipse;
+import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Polyline;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class FatMapShapeObject extends FatMapObject {
@@ -20,41 +26,66 @@ public class FatMapShapeObject extends FatMapObject {
 	@Override
 	public void setX(float x){
 		super.setX(x);
+		if(!this.moveable) return;
 		if(this.mapObject instanceof CircleMapObject){
 			CircleMapObject obj = (CircleMapObject)this.mapObject;
-			obj.getCircle().x = x;
+			obj.getCircle().set(getX(), getY(), obj.getCircle().radius);
 		} else if(this.mapObject instanceof EllipseMapObject){
 			EllipseMapObject obj = (EllipseMapObject)this.mapObject;
-			obj.getEllipse().x = x;
+			obj.getEllipse().set(getX(), getY(), obj.getEllipse().width, obj.getEllipse().height);
 		} else if(this.mapObject instanceof PolygonMapObject){
 			PolygonMapObject obj = (PolygonMapObject)this.mapObject;
-			obj.getPolygon().setPosition(x, obj.getPolygon().getY());
+			obj.getPolygon().setPosition(getX(), obj.getPolygon().getY());
 		} else if(this.mapObject instanceof PolylineMapObject){
 			PolylineMapObject obj = (PolylineMapObject)this.mapObject;
-			obj.getPolygon().setPosition(x, obj.getPolygon().getY());
+			obj.getPolyline().setPosition(getX(), obj.getPolyline().getY());
 		} else if(this.mapObject instanceof RectangleMapObject){
 			RectangleMapObject obj = (RectangleMapObject)this.mapObject;
-			obj.getRectangle().x = x;
+			obj.getRectangle().setX(getX());
 		}
 	}
 	@Override
 	public void setY(float y){
 		super.setY(y);
+		if(!this.moveable) return;
 		if(this.mapObject instanceof CircleMapObject){
 			CircleMapObject obj = (CircleMapObject)this.mapObject;
-			obj.getCircle().y = y;
+			obj.getCircle().set(getX(), getY(), obj.getCircle().radius);
 		} else if(this.mapObject instanceof EllipseMapObject){
 			EllipseMapObject obj = (EllipseMapObject)this.mapObject;
-			obj.getEllipse().y = y;
+			obj.getEllipse().set(getX(), getY(), obj.getEllipse().width, obj.getEllipse().height);
 		} else if(this.mapObject instanceof PolygonMapObject){
 			PolygonMapObject obj = (PolygonMapObject)this.mapObject;
-			obj.getPolygon().setPosition(obj.getPolygon().getX(), y);
+			obj.getPolygon().setPosition(obj.getPolygon().getX(), getY());
 		} else if(this.mapObject instanceof PolylineMapObject){
 			PolylineMapObject obj = (PolylineMapObject)this.mapObject;
-			obj.getPolygon().setPosition(obj.getPolygon().getX(), y);
+			obj.getPolyline().setPosition(obj.getPolyline().getX(), getY());
 		} else if(this.mapObject instanceof RectangleMapObject){
 			RectangleMapObject obj = (RectangleMapObject)this.mapObject;
-			obj.getRectangle().y = y;
+			obj.getRectangle().setY(getY());
+		}
+	}
+	
+	public void draw(ShapeRenderer renderer){
+		float alpha = 0f;
+		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = 0.0f;
+		if(this.selected) renderer.setColor(.75f, .25f, .25f, alpha);
+		else renderer.setColor(0f, .25f, .75f, alpha);
+		if(this.mapObject instanceof CircleMapObject){
+			Circle circle = ((CircleMapObject)this.mapObject).getCircle();
+			renderer.circle(circle.x, circle.y, circle.radius);
+		} else if(this.mapObject instanceof EllipseMapObject){
+			Ellipse ellipse = ((EllipseMapObject)this.mapObject).getEllipse();
+			renderer.ellipse(ellipse.x, ellipse.y, ellipse.width, ellipse.height);
+		} else if(this.mapObject instanceof PolygonMapObject){
+			Polygon polygon = ((PolygonMapObject)this.mapObject).getPolygon();
+			renderer.polygon(polygon.getTransformedVertices());
+		} else if(this.mapObject instanceof PolylineMapObject && renderer.getCurrentType() == ShapeRenderer.ShapeType.Line){
+			Polyline polyline = ((PolylineMapObject)this.mapObject).getPolyline();
+			renderer.polyline(polyline.getTransformedVertices());
+		} else if(this.mapObject instanceof RectangleMapObject ){
+			Rectangle rect = ((RectangleMapObject)this.mapObject).getRectangle();
+			renderer.rect(rect.x, rect.y, rect.width, rect.height);
 		}
 	}
 
