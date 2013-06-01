@@ -1,5 +1,6 @@
 package trixt0r.map.fat.core;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.CircleMapObject;
@@ -15,12 +16,20 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class FatMapShapeObject extends FatMapObject {
+	
+	public static final Color DESELECTED = new Color(0f, .75f, .25f, 1f), SELECTED = new Color(.75f, .25f, .25f,1f);
+	
+	private Color renderColor = new Color();
 
 	public FatMapShapeObject(FatMapLayer layer, int id, MapObject mapObject) {
 		super(layer, id, mapObject);
 		if(!(mapObject instanceof CircleMapObject) && !(mapObject instanceof EllipseMapObject) && !(mapObject instanceof PolygonMapObject) &&
 				!(mapObject instanceof PolylineMapObject) && !(mapObject instanceof RectangleMapObject))
 			throw new GdxRuntimeException("The given object does not represent a shape!");
+		if(mapObject instanceof RectangleMapObject){
+			Rectangle rect = ((RectangleMapObject)this.mapObject).getRectangle();
+			this.setBounds(rect.x, rect.y, rect.width, rect.height);
+		}
 	}
 	
 	@Override
@@ -67,10 +76,11 @@ public class FatMapShapeObject extends FatMapObject {
 	}
 	
 	public void draw(ShapeRenderer renderer){
-		float alpha = 0f;
-		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = 0.0f;
-		if(this.selected) renderer.setColor(.75f, .25f, .25f, alpha);
-		else renderer.setColor(0f, .25f, .75f, alpha);
+		float alpha = 1f;
+		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = 0.25f;
+		if(this.selected) this.renderColor.set(SELECTED).mul(1f, 1f, 1f, alpha);
+		else this.renderColor.set(DESELECTED).mul(1f, 1f, 1f, alpha);
+		renderer.setColor(renderColor);
 		if(this.mapObject instanceof CircleMapObject){
 			Circle circle = ((CircleMapObject)this.mapObject).getCircle();
 			renderer.circle(circle.x, circle.y, circle.radius);

@@ -9,6 +9,8 @@ import trixt0r.map.fat.widget.layer.nodes.LayerNode;
 import trixt0r.map.fat.widget.layer.nodes.ObjectNode;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -57,7 +59,6 @@ public class LayerWidget extends WidgetGroup{
 		
 		Dialog.fadeDuration = 0.2f;
 		window.setSize(200, Gdx.graphics.getHeight());
-		window.setX(Gdx.graphics.getWidth()-window.getWidth());
 		window.setMovable(false);
 		window.setClip(true);
 		window.setTitleAlignment(Align.left);
@@ -80,7 +81,9 @@ public class LayerWidget extends WidgetGroup{
 	@Override
 	public void layout(){
 		super.layout();
-		window.setSize(Math.min(Gdx.graphics.getWidth(), 200), Gdx.graphics.getHeight());
+		window.setSize(Math.min(Gdx.graphics.getWidth(), 200), Gdx.graphics.getHeight()-225f);
+		this.setBounds(Gdx.graphics.getWidth(), 200f, 200f, window.getHeight()-window.getY());
+		if(!this.fadeOut) this.setX(this.getX()-window.getWidth());
 		scrollPane.setBounds(0, 0, window.getWidth(), window.getHeight()-45);
 		
 		layerTree.setWidth(scrollPane.getWidth());
@@ -101,12 +104,12 @@ public class LayerWidget extends WidgetGroup{
 	public void act(float delta){
 		super.act(delta);
 		if(this.fadeOut){
-			this.window.setWidth(Math.max(this.window.getWidth()-fadeSpeed,0));
-			this.window.setX(Math.min(this.window.getX()+fadeSpeed,Gdx.graphics.getWidth()));
+			this.setWidth(Math.max(this.getWidth()-fadeSpeed,0));
+			this.setX(Math.min(this.getX()+fadeSpeed,Gdx.graphics.getWidth()));
 		}
 		else{
-			this.window.setWidth(Math.min(this.window.getWidth()+fadeSpeed,200f));
-			this.window.setX(Math.max(Gdx.graphics.getWidth()-window.getWidth(),this.window.getX()-fadeSpeed));
+			this.setWidth(Math.min(this.getWidth()+fadeSpeed,200f));
+			this.setX(Math.max(Gdx.graphics.getWidth()-this.getWidth(),this.getX()-fadeSpeed));
 		}
 		
 		final Array<Node> selected = layerTree.getSelection();
@@ -190,5 +193,12 @@ public class LayerWidget extends WidgetGroup{
 			}
 		}
 		return objects;
+	}
+	
+	public boolean hasFocus(){
+		Vector2 mouse = this.stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+		Vector2 v = this.screenToLocalCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+		Actor hit = this.stage.hit(mouse.x, mouse.y, false);
+		return hit == this.hit(v.x,v.y, false) && hit != null;
 	}
 }

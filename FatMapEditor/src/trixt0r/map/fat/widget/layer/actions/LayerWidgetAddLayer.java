@@ -2,7 +2,6 @@ package trixt0r.map.fat.widget.layer.actions;
 
 import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.core.FatMapLayer;
-import trixt0r.map.fat.core.FatMapLayers;
 import trixt0r.map.fat.widget.layer.nodes.ButtonNode;
 import trixt0r.map.fat.widget.layer.nodes.LayerNode;
 
@@ -29,7 +28,8 @@ public class LayerWidgetAddLayer extends LayerWidgetAction{
 	public boolean act(float delta) {
 		if(this.name == null) return false;
 		Label label = new Label(this.name, FatMapEditor.skin);
-		FatMapLayer layer = FatMapLayers.addLayer(this.name);
+		FatMapLayer layer = new FatMapLayer(FatMapLayer.getLayerId(), this.name);
+		FatMapEditor.mapStage.addActor(layer);
 		LayerNode node = new LayerNode(label, layer);
 		this.layerTree.add(node);
 		node.add(new ButtonNode(FatMapEditor.skin));

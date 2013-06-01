@@ -1,6 +1,6 @@
 package trixt0r.map.fat.widget.layer.actions;
 
-import trixt0r.map.fat.core.FatMapLayers;
+import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.widget.layer.nodes.LayerNode;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Tree;
@@ -29,7 +29,7 @@ public class LayerWidgetRemoveLayer extends LayerWidgetAction{
 		
 		for(Node node: this.toRemove){
 			this.layerTree.remove(node);
-			FatMapLayers.removeLayer(((LayerNode)node).layer);
+			FatMapEditor.mapStage.getActors().removeValue(((LayerNode)node).layer, true);
 		}
 		return true;
 	}

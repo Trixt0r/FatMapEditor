@@ -1,10 +1,12 @@
 package trixt0r.map.fat.core;
 
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Array;
 
-public class FatMapLayer extends MapLayer {
+public class FatMapLayer extends Group {
+	private static int LAYER_ID;
+	
 	public final int id;
 	public String name;
 	
@@ -28,14 +30,20 @@ public class FatMapLayer extends MapLayer {
 	public void addObject(FatMapObject object){
 		object.layer = this;
 		this.objects.add(object);
+		this.addActor(object);
 	}
 	
 	public void removeObject(FatMapObject object){
 		object.layer = null;
 		this.objects.removeIndex(this.objects.indexOf(object, true));
+		super.getChildren().removeValue(object, true);
 	}
 	
 	public int getObjectId(){
 		return this.objectId++;
+	}
+	
+	public static int getLayerId(){
+		return LAYER_ID++;
 	}
 }
