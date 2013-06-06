@@ -169,7 +169,8 @@ public class LayerWidget extends WidgetGroup{
 				if(!(child instanceof ObjectNode)) continue;
 				ObjectNode obj = (ObjectNode)child;
 				if(obj.object == null) continue;
-				obj.object.selected = selected.contains(obj, true);
+				boolean select = selected.contains(obj, true);
+				obj.object.select(select);
 			}
 		}
 	}

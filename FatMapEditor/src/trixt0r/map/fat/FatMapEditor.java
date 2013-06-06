@@ -106,11 +106,13 @@ public class FatMapEditor implements ApplicationListener {
 		guiStage.act();
 		
 		mapStage.act();
+		
+		this.inputHandler.setSelectedObjects(this.layerWidget.getSelectedObjects());
 
 		//draw
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 			Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-			this.inputHandler.setSelectedObjects(this.layerWidget.getSelectedObjects());
+			
 			this.renderer.setColor(0.25f, 0.3f, 0.75f, 0.25f);
 			this.renderer.begin(ShapeType.Filled);
 				for(Node node: this.layerWidget.layerTree.getNodes()){
@@ -118,6 +120,7 @@ public class FatMapEditor implements ApplicationListener {
 					layer.draw(renderer);
 				}
 				//FatMapLayers.draw(this.renderer);
+				this.inputHandler.drawSelectRegion(renderer);
 			this.renderer.end();
 	
 			this.renderer.setColor(0.25f, 0.3f, 0.75f, 1.0f);
@@ -127,6 +130,7 @@ public class FatMapEditor implements ApplicationListener {
 					layer.draw(renderer);
 				}
 				//FatMapLayers.draw(this.renderer);
+				this.inputHandler.drawSelectRegion(renderer);
 			this.renderer.end();
 			this.renderer.setColor(new Color(0.25f, 0.3f, 0.75f, 0.25f));
 		

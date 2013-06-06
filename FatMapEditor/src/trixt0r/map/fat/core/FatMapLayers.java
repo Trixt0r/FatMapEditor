@@ -39,7 +39,7 @@ public class FatMapLayers extends Group{
 		return null;
 	}
 	
-	public  void draw(ShapeRenderer renderer){
+	public void draw(ShapeRenderer renderer){
 		for(FatMapLayer layer: LAYERS)
 			layer.draw(renderer);
 	}

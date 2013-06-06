@@ -1,5 +1,7 @@
 package trixt0r.map.fat.core;
 
+import trixt0r.map.fat.widget.layer.nodes.ObjectNode;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
@@ -21,15 +23,23 @@ public class FatMapShapeObject extends FatMapObject {
 	
 	private Color renderColor = new Color();
 
-	public FatMapShapeObject(FatMapLayer layer, int id, MapObject mapObject) {
-		super(layer, id, mapObject);
+	public FatMapShapeObject(FatMapLayer layer, int id, MapObject mapObject, ObjectNode node) {
+		super(layer, id, mapObject, node);
 		if(!(mapObject instanceof CircleMapObject) && !(mapObject instanceof EllipseMapObject) && !(mapObject instanceof PolygonMapObject) &&
 				!(mapObject instanceof PolylineMapObject) && !(mapObject instanceof RectangleMapObject))
 			throw new GdxRuntimeException("The given object does not represent a shape!");
 		if(mapObject instanceof RectangleMapObject){
 			Rectangle rect = ((RectangleMapObject)this.mapObject).getRectangle();
 			this.setBounds(rect.x, rect.y, rect.width, rect.height);
+			this.boundingBox = rect;
+		} else if(this.mapObject instanceof EllipseMapObject){
+			Ellipse ellipse = ((EllipseMapObject)this.mapObject).getEllipse();
+			this.setBounds(ellipse.x-ellipse.width/2, ellipse.y-ellipse.height/2, ellipse.width, ellipse.height);
+		} else if(this.mapObject instanceof CircleMapObject){
+			Circle circle = ((CircleMapObject)this.mapObject).getCircle();
+			this.setBounds(circle.x-circle.radius, circle.y-circle.radius, circle.radius*2, circle.radius*2);
 		}
+		this.calcBBox();
 	}
 	
 	@Override
@@ -97,6 +107,46 @@ public class FatMapShapeObject extends FatMapObject {
 			Rectangle rect = ((RectangleMapObject)this.mapObject).getRectangle();
 			renderer.rect(rect.x, rect.y, rect.width, rect.height);
 		}
+	}
+
+	@Override
+	protected void calcBBox() {
+		if(this.mapObject instanceof CircleMapObject){
+			Circle circle = ((CircleMapObject)this.mapObject).getCircle();
+			this.boundingBox.set(circle.x-circle.radius, circle.y-circle.radius, circle.radius*2, circle.radius*2);
+		} else if(this.mapObject instanceof EllipseMapObject){
+			Ellipse ellipse = ((EllipseMapObject)this.mapObject).getEllipse();
+			this.boundingBox.set(ellipse.x, ellipse.y, ellipse.width, ellipse.height);
+		} else if(this.mapObject instanceof PolygonMapObject){
+			Polygon polygon = ((PolygonMapObject)this.mapObject).getPolygon();
+			this.boundingBox = polygon.getBoundingRectangle();
+		} else if(this.mapObject instanceof PolylineMapObject){
+			Polyline polyline = ((PolylineMapObject)this.mapObject).getPolyline();
+			this.calcBBoxForPolyline(polyline);
+		}
+	}
+	
+	private void calcBBoxForPolyline(Polyline line) {
+		float[] vertices = line.getTransformedVertices();
+
+		float minX = vertices[0];
+		float minY = vertices[1];
+		float maxX = vertices[0];
+		float maxY = vertices[1];
+
+		final int numFloats = vertices.length;
+		for (int i = 2; i < numFloats; i += 2) {
+			minX = minX > vertices[i] ? vertices[i] : minX;
+			minY = minY > vertices[i + 1] ? vertices[i + 1] : minY;
+			maxX = maxX < vertices[i] ? vertices[i] : maxX;
+			maxY = maxY < vertices[i + 1] ? vertices[i + 1] : maxY;
+		}
+
+		this.boundingBox = new Rectangle();
+		this.boundingBox.x = minX;
+		this.boundingBox.y = minY;
+		this.boundingBox.width = maxX - minX;
+		this.boundingBox.height = maxY - minY;
 	}
 
 }
