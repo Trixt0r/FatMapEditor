@@ -19,8 +19,6 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class FatMapShapeObject extends FatMapObject {
 	
-	public static final Color DESELECTED = new Color(0f, .75f, .25f, 1f), SELECTED = new Color(.75f, .25f, .25f,1f);
-	
 	private Color renderColor = new Color();
 
 	public FatMapShapeObject(FatMapLayer layer, int id, MapObject mapObject, ObjectNode node) {
@@ -48,7 +46,7 @@ public class FatMapShapeObject extends FatMapObject {
 		if(!this.moveable) return;
 		if(this.mapObject instanceof CircleMapObject){
 			CircleMapObject obj = (CircleMapObject)this.mapObject;
-			obj.getCircle().set(getX(), getY(), obj.getCircle().radius);
+			obj.getCircle().set(getX()+this.getWidth()/2, obj.getCircle().y, obj.getCircle().radius);
 		} else if(this.mapObject instanceof EllipseMapObject){
 			EllipseMapObject obj = (EllipseMapObject)this.mapObject;
 			obj.getEllipse().set(getX(), getY(), obj.getEllipse().width, obj.getEllipse().height);
@@ -69,7 +67,7 @@ public class FatMapShapeObject extends FatMapObject {
 		if(!this.moveable) return;
 		if(this.mapObject instanceof CircleMapObject){
 			CircleMapObject obj = (CircleMapObject)this.mapObject;
-			obj.getCircle().set(getX(), getY(), obj.getCircle().radius);
+			obj.getCircle().set(obj.getCircle().x, getY()+this.getWidth()/2, obj.getCircle().radius);
 		} else if(this.mapObject instanceof EllipseMapObject){
 			EllipseMapObject obj = (EllipseMapObject)this.mapObject;
 			obj.getEllipse().set(getX(), getY(), obj.getEllipse().width, obj.getEllipse().height);
@@ -89,6 +87,7 @@ public class FatMapShapeObject extends FatMapObject {
 		float alpha = 1f;
 		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = 0.25f;
 		if(this.selected) this.renderColor.set(SELECTED).mul(1f, 1f, 1f, alpha);
+		else if(!this.isOnSelectedLayer) this.renderColor.set(NOT_ON_CURRENT_LAYER);
 		else this.renderColor.set(DESELECTED).mul(1f, 1f, 1f, alpha);
 		renderer.setColor(renderColor);
 		if(this.mapObject instanceof CircleMapObject){
@@ -113,7 +112,7 @@ public class FatMapShapeObject extends FatMapObject {
 	protected void calcBBox() {
 		if(this.mapObject instanceof CircleMapObject){
 			Circle circle = ((CircleMapObject)this.mapObject).getCircle();
-			this.boundingBox.set(circle.x-circle.radius, circle.y-circle.radius, circle.radius*2, circle.radius*2);
+			this.boundingBox.set(this.getX(), this.getY(), circle.radius*2, circle.radius*2);
 		} else if(this.mapObject instanceof EllipseMapObject){
 			Ellipse ellipse = ((EllipseMapObject)this.mapObject).getEllipse();
 			this.boundingBox.set(ellipse.x, ellipse.y, ellipse.width, ellipse.height);

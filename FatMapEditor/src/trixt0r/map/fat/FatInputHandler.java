@@ -40,14 +40,19 @@ public class FatInputHandler implements InputProcessor {
 	public boolean keyDown(int keycode) {
 		if(keycode == Keys.ESCAPE)
 			Gdx.app.exit();
-		if(keycode == Keys.SPACE){
-		}
+		if(!this.mapClicked) return false;
+		if(keycode == Keys.SPACE) FatTransformer.snapToGrid = true;
+		if(keycode == Keys.LEFT) FatTransformer.translateRelative(selectedObjects, (FatTransformer.snapToGrid) ? -FatMapEditor.GRID_XOFFSET: -1f, 0f);
+		if(keycode == Keys.RIGHT) FatTransformer.translateRelative(selectedObjects, (FatTransformer.snapToGrid) ? FatMapEditor.GRID_XOFFSET : 1f, 0f);
+		if(keycode == Keys.UP) FatTransformer.translateRelative(selectedObjects, 0, (FatTransformer.snapToGrid) ? FatMapEditor.GRID_YOFFSET : 1f);
+		if(keycode == Keys.DOWN) FatTransformer.translateRelative(selectedObjects, 0, (FatTransformer.snapToGrid) ? -FatMapEditor.GRID_YOFFSET: -1f);
+		
 		if(keycode == Keys.F1) {
 			this.layerWidget.fadeOut = !this.layerWidget.fadeOut;
 			return true;
 		}
 		if(!this.cam.followMouse && this.mapClicked){
-			this.cam.setFollowSpeed(0.25f, 0.25f);
+			this.cam.setFollowSpeed(.25f, .25f);
 			float hacc = HORIZONTAL_ACCELERATION, vacc = VERTICAL_ACCELERATION;
 			this.mover.fastMode = Gdx.input.isKeyPressed(Keys.SHIFT_LEFT);
 			if(this.mover.fastMode){
@@ -65,6 +70,7 @@ public class FatInputHandler implements InputProcessor {
 
 	@Override
 	public boolean keyUp(int keycode) {
+		if(keycode == Keys.SPACE) FatTransformer.snapToGrid = false;
 		if(keycode == Keys.A || keycode == Keys.D)
 			mover.hacc = 0f;
 		if(keycode == Keys.S || keycode == Keys.W)
@@ -74,15 +80,16 @@ public class FatInputHandler implements InputProcessor {
 
 	@Override
 	public boolean keyTyped(char character) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer,
 			int button) {
+		boolean prevClicked = this.mapClicked;
 		this.mapClicked = false;
 		if(this.editor.guiHasFocus()) return false;
+		FatMapEditor.guiStage.unfocusAll();
 		this.mapClicked = true;
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
@@ -95,7 +102,7 @@ public class FatInputHandler implements InputProcessor {
 		
 		if(button == Buttons.LEFT ){
 			this.selectionRect.set(v.x, v.y, 0f, 0f);
-			if(this.selectedObjects != null){
+			if(this.selectedObjects != null && prevClicked){
 				for(FatMapObject object: this.selectedObjects)
 					object.select(false);
 				this.selectedObjects = null;
@@ -106,6 +113,7 @@ public class FatInputHandler implements InputProcessor {
 		if(!this.mapClicked) return false;
 		if(this.selectedObjects == null) return false;
 		if(this.selectedObjects.size == 0) return false;
+		
 		for(FatMapObject object: this.selectedObjects){
 			object.xDiff = object.getX() - v.x;
 			object.yDiff = object.getY() - v.y;
@@ -117,6 +125,11 @@ public class FatInputHandler implements InputProcessor {
 	public boolean touchUp(int screenX, int screenY, int pointer,
 			int button) {
 		if(!this.mapClicked) return false;
+		
+		for(FatMapObject obj: this.selectedObjects){
+			obj.xDiff = 0f;
+			obj.yDiff = 0f;
+		}
 		
 		if(button == Buttons.LEFT){
 			Vector3 v = new Vector3(screenX, screenY,0f);
@@ -155,23 +168,31 @@ public class FatInputHandler implements InputProcessor {
 		
 		if(!this.dragAble || this.selectedObjects == null) return false;
 		if(this.selectedObjects.size == 0) return false;
-		for(FatMapObject object: this.selectedObjects){
-			object.setX(v.x+object.xDiff);
-			object.setY(v.y+object.yDiff);
-		}
+		FatTransformer.translate(this.selectedObjects, v.x, v.y, true);
 		return true;
 	}
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		// TODO Auto-generated method stub
+		if(this.cam.followMouse && !this.cam.isZoomOut()){
+			this.cam.setFollowSpeed(0.1f, 0.1f);
+			Vector3 v = new Vector3(screenX, screenY, 0f);
+			this.cam.unproject(v);
+			this.mover.setPosition(v.x, v.y);
+		}
 		return false;
 	}
 
 	@Override
 	public boolean scrolled(int amount) {
 		if(!this.mapClicked) return false;
-		FatMapEditor.guiStage.setScrollFocus(null);
+		FatMapEditor.guiStage.unfocusAll();
+		
+		this.cam.setFollowSpeed(0.1f, 0.1f);
+		Vector3 v = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0f);
+		this.cam.unproject(v);
+		this.mover.setPosition(v.x, v.y);
+		
 		this.cam.setZoomOut(amount > 0);
 		
 		float am = ZOOM_SPEED*amount;
@@ -189,31 +210,22 @@ public class FatInputHandler implements InputProcessor {
 	
 	public void drawSelectRegion(ShapeRenderer renderer){
 		float alpha = 1f;
-		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = 0.25f;
-		renderer.setColor(1f, 0.75f, 0.75f, alpha);
+		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = .25f;
+		renderer.setColor(1f, .75f, .75f, alpha);
 		renderer.rect(this.selectionRect.x, this.selectionRect.y, this.selectionRect.width, this.selectionRect.height);
 	}
 	
 	private void selectFromRect(){
-		/*float minX = Math.min(this.selectionRect.x, this.selectionRect.width), maxX = Math.max(this.selectionRect.x, this.selectionRect.width);
-		float minY = Math.min(this.selectionRect.y, this.selectionRect.height), maxY = Math.max(this.selectionRect.y, this.selectionRect.height);
-		int xSign = sign((this.selectionRect.x+this.selectionRect.width)-this.selectionRect.x);
-		int ySign = sign((this.selectionRect.y+this.selectionRect.height)-this.selectionRect.y);*/
 		for(Actor actor: FatMapEditor.mapStage.getActors()){
 			if(!(actor instanceof FatMapLayer)) continue;
 			FatMapLayer layer = (FatMapLayer) actor;
 			for(FatMapObject obj: layer.objects){
 				if(Intersector.overlaps(selectionRect, obj.getBBox()))
 					obj.select(true);
-				else
-					obj.select(false);
+				/*else
+					obj.select(false);*/
 			}
 		}
 	}
-	
-	/*private int sign(float x){
-		if(x >= 0) return 1;
-		else return -1;
-	}*/
 
 }

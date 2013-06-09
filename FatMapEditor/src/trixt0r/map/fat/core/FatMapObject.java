@@ -2,12 +2,15 @@ package trixt0r.map.fat.core;
 
 import trixt0r.map.fat.widget.layer.nodes.ObjectNode;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public abstract class FatMapObject extends Actor{
+	
+	public static final Color DESELECTED = new Color(0f, .75f, .25f, 1f), SELECTED = new Color(.75f, .25f, .25f,1f), NOT_ON_CURRENT_LAYER = new Color(.75f, .75f, .75f, .25f);
 	
 	public FatMapLayer layer;
 	public final int id;
@@ -16,6 +19,7 @@ public abstract class FatMapObject extends Actor{
 	public float xDiff, yDiff;
 	protected ObjectNode node;
 	protected boolean selected;
+	public boolean isOnSelectedLayer;
 	protected Rectangle boundingBox;
 	
 	public FatMapObject(FatMapLayer layer, int id, MapObject mapObject, ObjectNode node){
@@ -35,7 +39,7 @@ public abstract class FatMapObject extends Actor{
 	
 	public void select(boolean select){
 		this.selected = select;
-		if(!this.node.getParent().getTree().getSelection().contains(node, true) && this.selected)
+		if(!this.node.getParent().getTree().getSelection().contains(node, true) && this.selected && this.isOnSelectedLayer)
 			this.node.getParent().getTree().getSelection().add(this.node);
 		else if(this.node.getParent().getTree().getSelection().contains(node, true) && !this.selected)
 			this.node.getParent().getTree().getSelection().removeValue(node, true);

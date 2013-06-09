@@ -1,5 +1,6 @@
 package trixt0r.map.fat.widget.layer;
 
+import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.widget.LabelTextField;
 import trixt0r.map.fat.widget.layer.actions.LayerWidgetAddObject;
 import trixt0r.map.fat.widget.layer.nodes.LayerNode;
@@ -25,8 +26,8 @@ public class NewLayerObjectDialog extends Dialog {
 		this.name = new LabelTextField("Name: ", skin, "newObject");
 		this.posX = new LabelTextField("X: ", skin, 50, ""+(Gdx.graphics.getWidth()/2-100));
 		this.posY = new LabelTextField("Y: ", skin, 50, ""+Gdx.graphics.getHeight()/2);
-		this.scaleX = new LabelTextField("X: ", skin, 50, "1");
-		this.scaleY = new LabelTextField("Y: ", skin, 50, "1");
+		this.scaleX = new LabelTextField("X: ", skin, 50, "10");
+		this.scaleY = new LabelTextField("Y: ", skin, 50, "10");
 		this.angle = new LabelTextField("Angle: ", skin, 50, "0");
 		this.alpha = new LabelTextField("Alpha: ", skin, 50, "100");
 		
@@ -61,6 +62,7 @@ public class NewLayerObjectDialog extends Dialog {
 			dialog.alpha = Float.parseFloat(this.alpha.getText()) / 100;
 			dialog.angle = Float.parseFloat(this.angle.getText()) % 360;
 			dialog.act(0);
+			this.getStage().unfocus(this);
 		}
 	}
 	
@@ -83,8 +85,13 @@ public class NewLayerObjectDialog extends Dialog {
 		super.show(stage);
 		this.name.field.setText("new Object"+(this.layerNode.getChildren().size));
 		stage.setKeyboardFocus(this.name.field);
-		this.posX.field.setText(""+(Gdx.graphics.getWidth()/2-100));
-		this.posY.field.setText(""+(Gdx.graphics.getHeight()/2));
+		this.posX.field.setText(""+(FatMapEditor.mapStage.getCamera().position.x));
+		this.posY.field.setText(""+(FatMapEditor.mapStage.getCamera().position.y));
+		this.scaleX.field.setText("10");
+		this.scaleY.field.setText("10");
+		this.angle.field.setText("0");
+		this.alpha.field.setText("100");
+		
 		this.name.field.selectAll();
 		this.posX.field.selectAll();
 		this.posY.field.selectAll();

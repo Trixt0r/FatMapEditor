@@ -35,8 +35,10 @@ public class NewLayerDialog extends Dialog{
 	@Override
 	public void result(Object object){
 		if(this.getColor().a != 1) cancel();
-		if(object == this.field && this.getColor().a == 1)
+		if(object == this.field && this.getColor().a == 1){
 			new LayerWidgetAddLayer(tree, field.getText()).act(0);
+			this.getStage().unfocus(this);
+		}
 	}
 	
 	@Override

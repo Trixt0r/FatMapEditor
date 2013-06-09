@@ -32,8 +32,10 @@ public class RemoveDialog extends Dialog{
 	@Override
 	public void result(Object object){
 		if(this.getColor().a != 1) cancel();
-		if(object == this.question && this.getColor().a == 1)
+		if(object == this.question && this.getColor().a == 1){
 			this.removeAction.act(0);
+			this.getStage().unfocus(this);
+		}
 	}
 	
 	@Override

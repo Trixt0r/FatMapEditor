@@ -13,6 +13,7 @@ import com.badlogic.gdx.maps.objects.CircleMapObject;
 import com.badlogic.gdx.maps.objects.EllipseMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Tree.Node;;
 
 /**
  * An action which is responsible for adding new objects to an existing layer.
@@ -42,7 +43,12 @@ public class LayerWidgetAddObject extends LayerWidgetObjectAction {
 		obj.setX(x-width/2); obj.setY(y-height/2);
 		
 		layer.addObject(obj);
+		
+		for(Node n: root.getChildren())
+			root.getTree().getSelection().removeValue(n, true);
+		
 		root.add(node);
+		root.getTree().getSelection().add(node);
 		return true;
 	}
 

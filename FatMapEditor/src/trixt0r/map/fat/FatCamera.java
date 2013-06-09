@@ -1,10 +1,8 @@
 package trixt0r.map.fat;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 /**
@@ -77,12 +75,6 @@ public class FatCamera extends OrthographicCamera{
 		if(this.alphaZoomFar < 1 && this.zoomOut && this.zoomCount == this.zoomThreshold) this.alphaZoomFar = Math.min(this.alphaZoomFar+this.zoomSpeed,1f);
 		if(this.alphaZoomNear < 1 && !this.zoomOut && this.zoomCount == this.zoomThreshold)	this.alphaZoomNear = Math.min(this.alphaZoomNear+this.zoomSpeed,1f);
 		
-		if(this.followMouse && !zoomOut){
-			this.setFollowSpeed(0.1f, 0.1f);
-			Vector3 v = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0f);
-			this.unproject(v);
-			this.toFollow.setPosition(v.x, v.y);
-		}
 		this.followMouse = !(this.zoom == this.zoomFar || this.zoom == this.zoomNear);
 		
 		this.zoom();

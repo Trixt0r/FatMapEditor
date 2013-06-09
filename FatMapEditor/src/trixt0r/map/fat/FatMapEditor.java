@@ -1,9 +1,10 @@
 package trixt0r.map.fat;
 
 import trixt0r.map.fat.core.FatMapLayer;
+import trixt0r.map.fat.widget.control.ControllerWidget;
 import trixt0r.map.fat.widget.layer.LayerWidget;
-import trixt0r.map.fat.widget.layer.NewLayerDialog;
 import trixt0r.map.fat.widget.layer.nodes.LayerNode;
+import trixt0r.map.fat.widget.tools.ToolsWidget;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -23,6 +24,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Tree.Node;
 
 public class FatMapEditor implements ApplicationListener {
+	public static int GRID_YOFFSET = 32;
+	public static int GRID_XOFFSET = 32;
 	private OrthographicCamera guiCamera;
 	private SpriteBatch batch;
 	private ShapeRenderer renderer;
@@ -31,8 +34,9 @@ public class FatMapEditor implements ApplicationListener {
 	public static Stage guiStage, mapStage;
 	BitmapFont font;
 	Color color;
-	NewLayerDialog diag;
 	LayerWidget layerWidget;
+	ControllerWidget controllerWidget;
+	ToolsWidget toolsWidget;
 	FatInputHandler inputHandler;
 	CameraMover mover;
 	FatCamera mapCamera;
@@ -71,13 +75,14 @@ public class FatMapEditor implements ApplicationListener {
 		
 		mapStage.addActor(mover);
 		
-		//this.mapCamera.position.x = w/2; //this.guiCamera.position.y =h/2;
-		
 		this.batch = new SpriteBatch();
 		this.renderer = new ShapeRenderer();
 		
 		//Set up gui
+		
+		this.controllerWidget = new ControllerWidget(guiStage, skin);
 		this.layerWidget = new LayerWidget(guiStage,skin);
+		this.toolsWidget = new ToolsWidget(guiStage,skin);
 		
 		//Set up input
 		this.inputHandler = new FatInputHandler(this);
@@ -89,12 +94,14 @@ public class FatMapEditor implements ApplicationListener {
 	public void dispose() {
 		this.batch.dispose();
 		this.renderer.dispose();
+		this.toolsWidget.dispose();
 		skin.dispose();
 	}
 
 	@Override
 	public void render() {
-		Gdx.gl.glClearColor((float)50/255,(float)99/255,(float)187/255, 1);
+		//Gdx.gl.glClearColor((float)50/255,(float)99/255,(float)187/255, 1);
+		Gdx.gl.glClearColor(.25f,.5f, .5f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		//update
@@ -103,9 +110,9 @@ public class FatMapEditor implements ApplicationListener {
 		this.renderer.setProjectionMatrix(this.mapCamera.combined);
 		this.batch.setProjectionMatrix(this.guiCamera.combined);
 		
-		guiStage.act();
-		
 		mapStage.act();
+		
+		guiStage.act();
 		
 		this.inputHandler.setSelectedObjects(this.layerWidget.getSelectedObjects());
 
@@ -113,46 +120,72 @@ public class FatMapEditor implements ApplicationListener {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 			Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 			
-			this.renderer.setColor(0.25f, 0.3f, 0.75f, 0.25f);
 			this.renderer.begin(ShapeType.Filled);
+				
+				this.renderer.rect(this.mapCamera.position.x-this.mapCamera.viewportWidth*this.mapCamera.zoom/2,
+						this.mapCamera.position.y-this.mapCamera.viewportHeight*this.mapCamera.zoom/2, 
+						this.mapCamera.viewportWidth*this.mapCamera.zoom, this.mapCamera.viewportHeight*this.mapCamera.zoom, 
+						new Color(.25f,.25f,.25f,0.5f), new Color(.25f,.25f,.25f,0.5f), new Color(.75f,.75f,.75f,0.5f), new Color(.75f,.75f,.75f,0.5f));
+				
 				for(Node node: this.layerWidget.layerTree.getNodes()){
 					FatMapLayer layer = ((LayerNode)node).layer;
 					layer.draw(renderer);
 				}
-				//FatMapLayers.draw(this.renderer);
 				this.inputHandler.drawSelectRegion(renderer);
 			this.renderer.end();
-	
-			this.renderer.setColor(0.25f, 0.3f, 0.75f, 1.0f);
 			this.renderer.begin(ShapeType.Line);
+			
 				for(Node node: this.layerWidget.layerTree.getNodes()){
 					FatMapLayer layer = ((LayerNode)node).layer;
 					layer.draw(renderer);
 				}
-				//FatMapLayers.draw(this.renderer);
 				this.inputHandler.drawSelectRegion(renderer);
+	
+				this.renderer.setColor(.25f, .25f, .25f, 0.75f);
+
+				for(int x = 0; x <= this.mapCamera.viewportWidth*this.mapCamera.zoom && GRID_XOFFSET > 5; x+=GRID_XOFFSET)
+					this.renderer.line(Math.round((this.mapCamera.position.x-(this.mapCamera.viewportWidth*this.mapCamera.zoom)/2)/GRID_XOFFSET)*GRID_XOFFSET+x, 
+							this.mapCamera.position.y-(mapCamera.viewportHeight/2)*this.mapCamera.zoom,
+							Math.round((this.mapCamera.position.x-(this.mapCamera.viewportWidth*this.mapCamera.zoom)/2)/GRID_XOFFSET)*GRID_XOFFSET+x,
+							this.mapCamera.position.y+(mapCamera.viewportHeight/2)*this.mapCamera.zoom);
+				for(int y = 0; y <= this.mapCamera.viewportHeight*this.mapCamera.zoom && GRID_YOFFSET > 5; y+=GRID_YOFFSET)
+					this.renderer.line(this.mapCamera.position.x-(this.mapCamera.viewportWidth/2)*this.mapCamera.zoom,
+							Math.round((this.mapCamera.position.y-(this.mapCamera.viewportHeight*this.mapCamera.zoom)/2)/GRID_YOFFSET)*GRID_YOFFSET+y,
+							this.mapCamera.position.x+(this.mapCamera.viewportWidth/2)*this.mapCamera.zoom,
+							Math.round((this.mapCamera.position.y-(this.mapCamera.viewportHeight*this.mapCamera.zoom)/2)/GRID_YOFFSET)*GRID_YOFFSET+y);
+
+				this.renderer.setColor(.75f, .75f, .75f, 0.75f);
+				this.renderer.line(this.mapCamera.position.x-10*this.mapCamera.zoom, this.mapCamera.position.y, this.mapCamera.position.x+10*this.mapCamera.zoom, this.mapCamera.position.y);
+				this.renderer.line(this.mapCamera.position.x, this.mapCamera.position.y+10*this.mapCamera.zoom, this.mapCamera.position.x, this.mapCamera.position.y-10*this.mapCamera.zoom);
+				
+				
 			this.renderer.end();
-			this.renderer.setColor(new Color(0.25f, 0.3f, 0.75f, 0.25f));
 		
 			this.batch.begin();
 			guiStage.draw();
 			this.batch.end();
+			
 		Gdx.gl.glDisable(GL20.GL_BLEND);
+		//System.out.println("Keyboard: "+guiStage.getKeyboardFocus()+", Scroll: "+guiStage.getScrollFocus());
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		Gdx.graphics.setDisplayMode(Math.max(640, width), Math.max(480, height), Gdx.graphics.isFullscreen());
-		guiStage.setViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-		this.guiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		int maxWidth = Math.max(800, width), maxHeight = Math.max(600, height);
+		Gdx.graphics.setDisplayMode(maxWidth, maxHeight, Gdx.graphics.isFullscreen());
+		
+		//Gdx.gl.glViewport(0, 0, maxWidth, maxHeight);
+		guiStage.setViewport(maxWidth, maxHeight, true);
+		this.guiCamera.setToOrtho(false,maxWidth, maxHeight);
 		this.guiCamera.update();
 
-		mapStage.setViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-		this.mapCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		mapStage.setViewport(maxWidth, maxHeight, true);
+		this.mapCamera.setToOrtho(false, maxWidth, maxHeight);
 		this.mapCamera.update();
 		
 		
 		this.layerWidget.layout();
+		this.controllerWidget.layout();
 	}
 
 	@Override
@@ -192,6 +225,6 @@ public class FatMapEditor implements ApplicationListener {
 	}
 	
 	public boolean guiHasFocus(){
-		return this.layerWidget.hasFocus();
+		return this.layerWidget.hasFocus() || this.controllerWidget.hasFocus() || this.toolsWidget.hasFocus();
 	}
 }

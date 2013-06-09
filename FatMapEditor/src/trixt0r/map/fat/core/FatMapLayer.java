@@ -34,9 +34,8 @@ public class FatMapLayer extends Group {
 	}
 	
 	public void removeObject(FatMapObject object){
-		object.layer = null;
-		this.objects.removeIndex(this.objects.indexOf(object, true));
-		super.getChildren().removeValue(object, true);
+		this.objects.removeValue(object, true);
+		super.removeActor(object);
 	}
 	
 	public int getObjectId(){
@@ -45,5 +44,10 @@ public class FatMapLayer extends Group {
 	
 	public static int getLayerId(){
 		return LAYER_ID++;
+	}
+	
+	public void setTransformable(boolean selected){
+		for(FatMapObject obj: this.objects)
+			obj.isOnSelectedLayer = selected;
 	}
 }

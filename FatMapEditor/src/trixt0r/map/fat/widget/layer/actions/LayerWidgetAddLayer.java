@@ -33,6 +33,8 @@ public class LayerWidgetAddLayer extends LayerWidgetAction{
 		LayerNode node = new LayerNode(label, layer);
 		this.layerTree.add(node);
 		node.add(new ButtonNode(FatMapEditor.skin));
+		this.layerTree.getSelection().clear();
+		this.layerTree.getSelection().add(node);
 		return true;
 	}
 
