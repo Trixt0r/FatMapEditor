@@ -5,19 +5,24 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
+import trixt0r.map.fat.FatTransformer;
 import trixt0r.map.fat.widget.FatWidget;
 
 public class ToolsWidget extends FatWidget implements Disposable{
 	
-	public final ImageButton creationTool, selectionTool, translationTool, scalingTool, rotationTool, erasingTool, flipHorTool, flipVerTool;
+	public final ToolButton creationTool, selectionTool, translationTool, scalingTool, rotationTool, erasingTool, flipHorTool, flipVerTool;
+	
+	private ToolButton lastPressed;
+	private Array<ToolButton> buttons;
 	
 	private Texture creationIcon, selectionIcon, translationIcon, scalingIcon, roationIcon, erasingIcon, flipHorIcon, flipVerIcon;
 
@@ -76,14 +81,14 @@ public class ToolsWidget extends FatWidget implements Disposable{
 		ImageButtonStyle flipVerStyle = new ImageButtonStyle(skin.get(ButtonStyle.class));
 		flipVerStyle.imageUp = new TextureRegionDrawable(flipVerImage);
 		
-		this.creationTool = new ImageButton(creationStyle);
-		this.selectionTool = new ImageButton(selectionStyle);
-		this.translationTool = new ImageButton(translationStyle);
-		this.scalingTool = new ImageButton(scalingStyle);
-		this.rotationTool = new ImageButton(rotationStyle);
-		this.erasingTool = new ImageButton(erasingStyle);
-		this.flipHorTool = new ImageButton(flipHorStyle);
-		this.flipVerTool = new ImageButton(flipVerStyle);
+		this.creationTool = new ToolButton(creationStyle, FatTransformer.TOOL.CREATION);
+		this.selectionTool = new ToolButton(selectionStyle, FatTransformer.TOOL.SELECTION);
+		this.translationTool = new ToolButton(translationStyle, FatTransformer.TOOL.TRANSLATION);
+		this.scalingTool = new ToolButton(scalingStyle, FatTransformer.TOOL.SCALING);
+		this.rotationTool = new ToolButton(rotationStyle, FatTransformer.TOOL.ROTATION);
+		this.erasingTool = new ToolButton(erasingStyle, FatTransformer.TOOL.ERASING);
+		this.flipHorTool = new ToolButton(flipHorStyle, FatTransformer.TOOL.FLIP_HOR);
+		this.flipVerTool = new ToolButton(flipVerStyle, FatTransformer.TOOL.FLIP_VER);
 		
 		this.window.setSize(creationTool.getWidth()*2+15, creationTool.getHeight()*5+10);
 		
@@ -95,6 +100,11 @@ public class ToolsWidget extends FatWidget implements Disposable{
 		this.table.addActor(erasingTool);
 		this.table.addActor(flipHorTool);
 		this.table.addActor(flipVerTool);
+		
+		this.buttons = new Array<ToolButton>(new ToolButton[]{creationTool,selectionTool,translationTool,
+				scalingTool,rotationTool, erasingTool, flipHorTool, flipVerTool});
+		
+		this.selectButton(this.selectionTool);
 		
 		
 		this.table.align(Align.left|Align.top);
@@ -123,6 +133,13 @@ public class ToolsWidget extends FatWidget implements Disposable{
 	
 	public void act(float delta){
 		super.act(delta);
+		
+		for(ToolButton button: this.buttons)
+			if(button.isPressed()){
+				this.selectButton(button);
+				break;
+			}
+		
 		if(Gdx.input.isKeyPressed(Keys.SPACE)) this.table.setY(this.table.getY()-5);
 		if(this.window.getX()+this.window.getWidth() > this.stage.getWidth()) this.window.setX(this.stage.getWidth()-this.window.getWidth());
 		if(this.window.getX() < 0) this.window.setX(0f);
@@ -140,6 +157,24 @@ public class ToolsWidget extends FatWidget implements Disposable{
 		this.scalingIcon.dispose();
 		this.flipHorIcon.dispose();
 		this.flipVerIcon.dispose();
+	}
+	
+	private void selectButton(ToolButton button){
+		if(button == null) return;
+		if(this.lastPressed != null){
+			this.lastPressed.setChecked(false);
+			this.lastPressed.setDisabled(false);
+			this.lastPressed.setColor(1f, 1f, 1f, 1f);
+		}
+		this.lastPressed = button;
+		this.lastPressed.setChecked(true);
+		this.lastPressed.setDisabled(true);
+		this.lastPressed.setColor(1f, .5f, .25f, 1f);
+		FatTransformer.currentTool = this.lastPressed.tool;
+	}
+	
+	public Button getLastPressed(){
+		return this.lastPressed;
 	}
 
 }

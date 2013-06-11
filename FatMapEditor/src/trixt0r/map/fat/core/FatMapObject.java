@@ -10,17 +10,19 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public abstract class FatMapObject extends Actor{
 	
-	public static final Color DESELECTED = new Color(0f, .75f, .25f, 1f), SELECTED = new Color(.75f, .25f, .25f,1f), NOT_ON_CURRENT_LAYER = new Color(.75f, .75f, .75f, .25f);
+	public static final Color DESELECTED = new Color(0f, .25f, .75f, 1f), SELECTED = new Color(.75f, .25f, .25f,1f), NOT_ON_CURRENT_LAYER = new Color(.75f, .75f, .75f, .25f);
 	
 	public FatMapLayer layer;
 	public final int id;
 	public final MapObject mapObject;
 	public boolean moveable;
-	public float xDiff, yDiff;
+	public float xDiff, yDiff, tempWidth, tempHeight, tempAngle, tempX, tempY;
 	protected ObjectNode node;
 	protected boolean selected;
 	public boolean isOnSelectedLayer;
 	protected Rectangle boundingBox;
+	protected float originXRel, originYRel;
+	private boolean dirty = false;
 	
 	public FatMapObject(FatMapLayer layer, int id, MapObject mapObject, ObjectNode node){
 		this.layer = layer;
@@ -58,18 +60,58 @@ public abstract class FatMapObject extends Actor{
 	public void setX(float x){
 		if(!this.moveable) return;
 		super.setX(x);
-		this.calcBBox();
+		this.dirty = true;
 	}
 	
 	@Override
 	public void setY(float y){
 		if(!this.moveable) return;
 		super.setY(y);
-		this.calcBBox();
+		this.dirty = true;
+	}
+	
+	@Override
+	public void setWidth(float width){
+		if(!this.moveable) return;
+		super.setWidth(width);
+		this.dirty = true;
+	}
+	
+	@Override
+	public void setHeight(float height){
+		if(!this.moveable) return;
+		super.setHeight(height);
+		this.dirty = true;
+	}
+	
+	@Override
+	public void setPosition(float x, float y){
+		this.setX(x);
+		this.setY(y);
+	}
+	
+	public void setOriginRel(float x, float y){
+		this.originXRel = x;
+		this.originYRel = y;
 	}
 	
 	public Rectangle getBBox(){
+		if(this.dirty){
+			this.dirty = false;
+			this.calcBBox();
+			/*final float minX = Math.min(this.boundingBox.x,this.boundingBox.x+this.boundingBox.width), maxX =Math.max(this.boundingBox.x,this.boundingBox.x+this.boundingBox.width);
+			final float minY = Math.min(this.boundingBox.y,this.boundingBox.y+this.boundingBox.height), maxY =Math.max(this.boundingBox.y,this.boundingBox.y+this.boundingBox.height);
+			this.boundingBox.x = minX;
+			this.boundingBox.y = minY;
+			this.boundingBox.width = maxX - minX;
+			this.boundingBox.height = maxY - minY;*/
+		}
 		return this.boundingBox;
+	}
+	
+	@Override
+	public void setRotation(float degrees){
+		super.setRotation(degrees);
 	}
 	
 }

@@ -109,7 +109,7 @@ public class LayerWidget extends FatWidget{
 	
 	private void checkLayerActions(Array<Node> selected){
 		checkLayerNodesFrom(selected);
-		if(!selected.contains(selectedLayer, true) && this.selectedLayer != null) selected.insert(selected.size-1, selectedLayer);
+		if(!selected.contains(selectedLayer, true) && this.selectedLayer != null) selected.insert(selected.size, selectedLayer);
 		
 		if(addLayerButton.isPressed() && this.newLayerDialog != this.stage.getScrollFocus())
 			newLayerDialog.show(stage);
@@ -162,7 +162,8 @@ public class LayerWidget extends FatWidget{
 	
 	private void removeObjectsFromNonSelectedLayer(Array<Node> selected){
 		for(Node node: selected)
-			if(node.getParent() != this.selectedLayer && node != this.selectedLayer) selected.removeValue(node, true);
+			if(node.getParent() != this.selectedLayer && node != this.selectedLayer)
+				selected.removeValue(node, true);
 	}
 	
 	private void selectObjects(Array<Node> selected, Array<Node> nodes){
@@ -186,7 +187,8 @@ public class LayerWidget extends FatWidget{
 			if(node instanceof ObjectNode && tempLayer == null)
 				tempLayer = node.getParent();
 		}
-		if(tempLayer != null) this.selectedLayer = tempLayer;		
+		if(tempLayer != null) this.selectedLayer = tempLayer;
+		((LayerNode)this.selectedLayer).layer.isCurrentLayer = true;
 		if(this.selectedLayer == null) return;
 		
 		for(Node node: selected)

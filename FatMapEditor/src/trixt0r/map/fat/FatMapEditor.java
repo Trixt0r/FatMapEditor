@@ -30,6 +30,12 @@ public class FatMapEditor implements ApplicationListener {
 	private SpriteBatch batch;
 	private ShapeRenderer renderer;
 	
+	public static final Color BOTTOM_LEFT_BG = new Color(.25f,.25f,.25f,0.5f),
+			BOTTOM_RIGHT_BG =new Color(.25f,.25f,.25f,0.5f),
+			TOP_LEFT_BG = new Color(.75f,.75f,.75f,0.5f),
+			TOP_RIGHT_BG = new Color(.75f,.75f,.75f,0.5f),
+			BG_COLOR =  new Color(.25f,.5f, .5f, 1);
+	
 	public final static Skin skin = new Skin();
 	public static Stage guiStage, mapStage;
 	BitmapFont font;
@@ -101,7 +107,7 @@ public class FatMapEditor implements ApplicationListener {
 	@Override
 	public void render() {
 		//Gdx.gl.glClearColor((float)50/255,(float)99/255,(float)187/255, 1);
-		Gdx.gl.glClearColor(.25f,.5f, .5f, 1);
+		Gdx.gl.glClearColor(BG_COLOR.r, BG_COLOR.g, BG_COLOR.b, BG_COLOR.r);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		//update
@@ -116,16 +122,34 @@ public class FatMapEditor implements ApplicationListener {
 		
 		this.inputHandler.setSelectedObjects(this.layerWidget.getSelectedObjects());
 
+		float gridWidth = this.mapCamera.viewportWidth*this.mapCamera.zoom, gridHeight = this.mapCamera.viewportHeight*this.mapCamera.zoom;
+		
 		//draw
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 			Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 			
 			this.renderer.begin(ShapeType.Filled);
-				
+			/*Color temp = new Color();
+			for(int x = -1; x < gridWidth/GRID_XOFFSET && GRID_XOFFSET > 5; x++){
+				for(int y = -1; y < gridHeight/GRID_YOFFSET; y++){
+					if(x % 2 == 0)
+						if(y % 2 == 0) temp.set(Color.BLACK);
+						else temp.set(Color.WHITE);
+					if(x % 2 == 1) 
+						if(y % 2 == 0) temp.set(Color.WHITE);
+						else temp.set(Color.BLACK);
+					temp.mul(1, 1, 1, .5f);
+					this.renderer.setColor(temp);
+					this.renderer.rect(Math.round((this.mapCamera.position.x-gridWidth/2)/GRID_XOFFSET)*GRID_XOFFSET + x*GRID_XOFFSET, 
+							Math.round((this.mapCamera.position.y-gridHeight/2)/GRID_YOFFSET)*GRID_YOFFSET + y*GRID_YOFFSET,
+						GRID_XOFFSET,GRID_YOFFSET);
+				}
+			}*/
+			
 				this.renderer.rect(this.mapCamera.position.x-this.mapCamera.viewportWidth*this.mapCamera.zoom/2,
 						this.mapCamera.position.y-this.mapCamera.viewportHeight*this.mapCamera.zoom/2, 
 						this.mapCamera.viewportWidth*this.mapCamera.zoom, this.mapCamera.viewportHeight*this.mapCamera.zoom, 
-						new Color(.25f,.25f,.25f,0.5f), new Color(.25f,.25f,.25f,0.5f), new Color(.75f,.75f,.75f,0.5f), new Color(.75f,.75f,.75f,0.5f));
+						BOTTOM_LEFT_BG, BOTTOM_RIGHT_BG, TOP_LEFT_BG, TOP_RIGHT_BG);
 				
 				for(Node node: this.layerWidget.layerTree.getNodes()){
 					FatMapLayer layer = ((LayerNode)node).layer;
@@ -144,20 +168,19 @@ public class FatMapEditor implements ApplicationListener {
 				this.renderer.setColor(.25f, .25f, .25f, 0.75f);
 
 				for(int x = 0; x <= this.mapCamera.viewportWidth*this.mapCamera.zoom && GRID_XOFFSET > 5; x+=GRID_XOFFSET)
-					this.renderer.line(Math.round((this.mapCamera.position.x-(this.mapCamera.viewportWidth*this.mapCamera.zoom)/2)/GRID_XOFFSET)*GRID_XOFFSET+x, 
-							this.mapCamera.position.y-(mapCamera.viewportHeight/2)*this.mapCamera.zoom,
-							Math.round((this.mapCamera.position.x-(this.mapCamera.viewportWidth*this.mapCamera.zoom)/2)/GRID_XOFFSET)*GRID_XOFFSET+x,
-							this.mapCamera.position.y+(mapCamera.viewportHeight/2)*this.mapCamera.zoom);
+					this.renderer.line(Math.round((this.mapCamera.position.x-gridWidth/2)/GRID_XOFFSET)*GRID_XOFFSET+x, 
+							this.mapCamera.position.y-gridHeight/2,
+							Math.round((this.mapCamera.position.x-gridWidth/2)/GRID_XOFFSET)*GRID_XOFFSET+x,
+							this.mapCamera.position.y+gridHeight/2);
 				for(int y = 0; y <= this.mapCamera.viewportHeight*this.mapCamera.zoom && GRID_YOFFSET > 5; y+=GRID_YOFFSET)
-					this.renderer.line(this.mapCamera.position.x-(this.mapCamera.viewportWidth/2)*this.mapCamera.zoom,
-							Math.round((this.mapCamera.position.y-(this.mapCamera.viewportHeight*this.mapCamera.zoom)/2)/GRID_YOFFSET)*GRID_YOFFSET+y,
-							this.mapCamera.position.x+(this.mapCamera.viewportWidth/2)*this.mapCamera.zoom,
-							Math.round((this.mapCamera.position.y-(this.mapCamera.viewportHeight*this.mapCamera.zoom)/2)/GRID_YOFFSET)*GRID_YOFFSET+y);
+					this.renderer.line(this.mapCamera.position.x-gridWidth/2,
+							Math.round((this.mapCamera.position.y-gridHeight/2)/GRID_YOFFSET)*GRID_YOFFSET+y,
+							this.mapCamera.position.x+gridWidth/2,
+							Math.round((this.mapCamera.position.y-gridHeight/2)/GRID_YOFFSET)*GRID_YOFFSET+y);
 
-				this.renderer.setColor(.75f, .75f, .75f, 0.75f);
+				/*this.renderer.setColor(.75f, .75f, .75f, 0.75f);
 				this.renderer.line(this.mapCamera.position.x-10*this.mapCamera.zoom, this.mapCamera.position.y, this.mapCamera.position.x+10*this.mapCamera.zoom, this.mapCamera.position.y);
-				this.renderer.line(this.mapCamera.position.x, this.mapCamera.position.y+10*this.mapCamera.zoom, this.mapCamera.position.x, this.mapCamera.position.y-10*this.mapCamera.zoom);
-				
+				this.renderer.line(this.mapCamera.position.x, this.mapCamera.position.y+10*this.mapCamera.zoom, this.mapCamera.position.x, this.mapCamera.position.y-10*this.mapCamera.zoom);*/
 				
 			this.renderer.end();
 		
