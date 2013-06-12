@@ -46,8 +46,8 @@ public class FatTransformer {
 			tempVec.set(x, y);
 			tempVec.sub(tempVec2);
 			if(snapToGrid)	snapToGrid(tempVec);
-			object.setWidth(object.tempWidth + tempVec.x);
-			object.setHeight(object.tempHeight + tempVec.y);
+			object.setScale(((object.tempWidth+tempVec.x)/object.tempWidth)*object.tempScaleX,
+					((object.tempHeight+tempVec.y)/object.tempHeight)*object.tempScaleY);
 		}
 	}
 	

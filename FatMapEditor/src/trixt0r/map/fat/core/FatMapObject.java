@@ -16,7 +16,7 @@ public abstract class FatMapObject extends Actor{
 	public final int id;
 	public final MapObject mapObject;
 	public boolean moveable;
-	public float xDiff, yDiff, tempWidth, tempHeight, tempAngle, tempX, tempY;
+	public float xDiff, yDiff, tempWidth, tempHeight, tempAngle, tempX, tempY, tempScaleX, tempScaleY;
 	protected ObjectNode node;
 	protected boolean selected;
 	public boolean isOnSelectedLayer;
@@ -36,6 +36,8 @@ public abstract class FatMapObject extends Actor{
 	}
 	
 	public abstract void draw(ShapeRenderer renderer);
+	
+	//public abstract void update();
 	
 	protected abstract void calcBBox();
 	
@@ -99,12 +101,6 @@ public abstract class FatMapObject extends Actor{
 		if(this.dirty){
 			this.dirty = false;
 			this.calcBBox();
-			/*final float minX = Math.min(this.boundingBox.x,this.boundingBox.x+this.boundingBox.width), maxX =Math.max(this.boundingBox.x,this.boundingBox.x+this.boundingBox.width);
-			final float minY = Math.min(this.boundingBox.y,this.boundingBox.y+this.boundingBox.height), maxY =Math.max(this.boundingBox.y,this.boundingBox.y+this.boundingBox.height);
-			this.boundingBox.x = minX;
-			this.boundingBox.y = minY;
-			this.boundingBox.width = maxX - minX;
-			this.boundingBox.height = maxY - minY;*/
 		}
 		return this.boundingBox;
 	}
@@ -112,6 +108,31 @@ public abstract class FatMapObject extends Actor{
 	@Override
 	public void setRotation(float degrees){
 		super.setRotation(degrees);
+	}
+	
+	public void setScale(float scaleX, float scaleY){
+		if(!this.moveable) return;
+		this.setScaleX(scaleX);
+		this.setScaleY(scaleY);
+	}
+	
+	@Override
+	public void setScale(float scale){
+		if(!this.moveable) return;
+		this.setScaleX(scale);
+		this.setScaleY(scale);
+	}
+	
+	@Override
+	public void setScaleX(float scaleX){
+		if(!this.moveable) return;
+		super.setScaleX(scaleX);
+	}
+	
+	@Override
+	public void setScaleY(float scaleY){
+		if(!this.moveable) return;
+		super.setScaleY(scaleY);
 	}
 	
 }

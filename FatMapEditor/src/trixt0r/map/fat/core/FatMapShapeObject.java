@@ -68,46 +68,46 @@ public class FatMapShapeObject extends FatMapObject {
 		this.calcBBox();
 	}
 	
-	@Override
-	public void setWidth(float width){
-		float tempWidth = this.getWidth();
-		super.setWidth(width);
+	@Override 
+	public void setScaleX(float scaleX){
+		super.setScaleX(scaleX);
 		if(!this.moveable) return;
 		if(this.mapObject instanceof EllipseMapObject){
 			Ellipse ellipse = ((EllipseMapObject)this.mapObject).getEllipse();
-			ellipse.width = getWidth();
+			ellipse.width = this.tempWidth*(this.getScaleX()/this.tempScaleX);
 		} else if(this.mapObject instanceof PolygonMapObject){
 			PolygonMapObject obj = (PolygonMapObject)this.mapObject;
-			obj.getPolygon().setScale((width/tempWidth)*obj.getPolygon().getScaleX(), obj.getPolygon().getScaleY());
+			obj.getPolygon().setScale(this.getScaleX(), this.getScaleY());
 		} else if(this.mapObject instanceof PolylineMapObject){
 			PolylineMapObject obj = (PolylineMapObject)this.mapObject;
-			obj.getPolyline().setScale((width/tempWidth)*obj.getPolyline().getScaleX(), obj.getPolyline().getScaleY());
+			obj.getPolyline().setScale(this.getScaleX(), this.getScaleY());
 		} else if(this.mapObject instanceof RectangleMapObject){
 			RectangleMapObject obj = (RectangleMapObject)this.mapObject;
-			obj.getRectangle().setWidth(getWidth());
+			obj.getRectangle().setWidth((this.getScaleX()/this.tempScaleX)*this.tempWidth);
 		}
 		this.calcBBox();
+		this.setSize(this.tempWidth*(this.getScaleX()/this.tempScaleX), this.getHeight());
 	}
 	
-	@Override
-	public void setHeight(float height){
-		float tempHeight = this.getHeight();
-		super.setHeight(height);
+	@Override 
+	public void setScaleY(float scaleY){
+		super.setScaleY(scaleY);
 		if(!this.moveable) return;
 		if(this.mapObject instanceof EllipseMapObject){
 			Ellipse ellipse = ((EllipseMapObject)this.mapObject).getEllipse();
-			ellipse.height = getHeight();
+			ellipse.height = this.tempHeight*(this.getScaleY()/this.tempScaleY);
 		} else if(this.mapObject instanceof PolygonMapObject){
 			PolygonMapObject obj = (PolygonMapObject)this.mapObject;
-			obj.getPolygon().setScale(obj.getPolygon().getScaleX(), (height/tempHeight)*obj.getPolygon().getScaleY());
+			obj.getPolygon().setScale(this.getScaleX(), this.getScaleY());
 		} else if(this.mapObject instanceof PolylineMapObject){
 			PolylineMapObject obj = (PolylineMapObject)this.mapObject;
-			obj.getPolyline().setScale(obj.getPolyline().getScaleX(), (height/tempHeight)*obj.getPolyline().getScaleY());
+			obj.getPolyline().setScale(this.getScaleX(), this.getScaleY());
 		} else if(this.mapObject instanceof RectangleMapObject){
 			RectangleMapObject obj = (RectangleMapObject)this.mapObject;
-			obj.getRectangle().setHeight(getHeight());
+			obj.getRectangle().setHeight((this.getScaleY()/this.tempScaleY)*this.tempHeight);
 		}
 		this.calcBBox();
+		this.setSize(this.getWidth(), this.tempHeight*(this.getScaleY()/this.tempScaleY));
 	}
 	
 	public void draw(ShapeRenderer renderer){
@@ -131,11 +131,11 @@ public class FatMapShapeObject extends FatMapObject {
 			Rectangle rect = ((RectangleMapObject)this.mapObject).getRectangle();
 			renderer.rect(rect.x, rect.y, rect.width, rect.height);
 		}
-		/*if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Line){
+		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Line){
 			renderer.setColor(0,1,1,1);
-			renderer.line(getX()+getOriginX()-5, getY()+getOriginY(), getX()+getOriginX()+5, getY()+getOriginY());
-			renderer.line(getX()+getOriginX(), getY()+getOriginY()-5, getX()+getOriginX(), getY()+getOriginY()+5);
-		}*/
+			renderer.line(this.boundingBox.x+getOriginX()-5, this.boundingBox.y+getOriginY(), this.boundingBox.x+getOriginX()+5, this.boundingBox.y+getOriginY());
+			renderer.line(this.boundingBox.x+getOriginX(), this.boundingBox.y+getOriginY()-5, this.boundingBox.x+getOriginX(), this.boundingBox.y+getOriginY()+5);
+		}
 		
 	}
 
@@ -151,7 +151,7 @@ public class FatMapShapeObject extends FatMapObject {
 		else if(this.mapObject instanceof RectangleMapObject)
 			this.boundingBox = ((RectangleMapObject)this.mapObject).getRectangle();
 		this.setOrigin(this.boundingBox.width*this.originXRel, this.boundingBox.height*this.originYRel);
-		super.setSize(this.boundingBox.width, this.boundingBox.height);
+		//super.setSize(this.boundingBox.width, this.boundingBox.height);
 	}
 	
 	@Override
@@ -167,5 +167,27 @@ public class FatMapShapeObject extends FatMapObject {
 	private void calcBBoxForPolyline(Polyline line) {
 		VerticesUtils.calcBBoxForVertices(line.getTransformedVertices(), this.boundingBox);
 	}
+
+	/*@Override
+	public void update() {
+		if(this.mapObject instanceof PolygonMapObject){
+			PolygonMapObject obj = (PolygonMapObject)this.mapObject;
+			obj.getPolygon().setPosition(0, 0);
+			//obj.getPolygon().setScale(1, 1);
+			obj.setPolygon(new Polygon(obj.getPolygon().getTransformedVertices()));
+			obj.getPolygon().setPosition(this.getX(), this.getY());
+			super.setScale(1);
+			//obj.getPolygon().setScale(this.getScaleX(), this.getScaleY());
+		}
+		else if(this.mapObject instanceof PolylineMapObject){
+			PolylineMapObject obj = (PolylineMapObject)this.mapObject;
+			obj.getPolyline().setPosition(0, 0);
+			//obj.getPolyline().setScale(1, 1);
+			obj.setPolyline(new Polyline(obj.getPolyline().getTransformedVertices()));
+			obj.getPolyline().setPosition(this.getX(), this.getY());
+			super.setScale(1);
+			//obj.getPolyline().setScale(this.getScaleX(), this.getScaleY());
+		}
+	}*/
 
 }

@@ -104,7 +104,6 @@ public class FatInputHandler implements InputProcessor {
 		this.mapClicked = true;
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
-		System.out.println(v);
 		
 		this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
 		
@@ -154,6 +153,8 @@ public class FatInputHandler implements InputProcessor {
 			object.tempWidth = object.getWidth();
 			object.tempHeight = object.getHeight();
 			object.tempAngle = object.getRotation();
+			object.tempScaleX = object.getScaleX();
+			object.tempScaleY = object.getScaleY();
 		}
 		
 		return true;
@@ -168,12 +169,15 @@ public class FatInputHandler implements InputProcessor {
 		this.scaleAble = false;
 		
 		for(FatMapObject object: this.selectedObjects){
+			//object.update();
 			object.xDiff = 0;
 			object.yDiff = 0;
 			object.tempX = object.getX();
 			object.tempY = object.getY();
 			object.tempWidth = object.getWidth();
 			object.tempHeight = object.getHeight();
+			object.tempScaleX = object.getScaleX();
+			object.tempScaleY = object.getScaleY();
 			object.tempAngle = 0;
 		}
 		
