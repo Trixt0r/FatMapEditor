@@ -41,7 +41,7 @@ public class LayerWidgetAddObject extends LayerWidgetObjectAction {
 		ObjectNode node = new ObjectNode(label,root, null);
 		FatMapLayer layer = root.layer;
 		float width = 10f*xscale, height = 10f*yscale;
-		MapObject[] objs = {/*new CircleMapObject(x,y, width/2),*/ new EllipseMapObject(x,y,width,height), new RectangleMapObject(x-width/2,y-height/2, width, height), getPolyline(x,y), getPolygon(x,y)};
+		MapObject[] objs = {new EllipseMapObject(x,y,width,height), new RectangleMapObject(x-width/2,y-height/2, width, height), getPolyline(x,y), getPolygon(x,y)};
 		int rand = new Random().nextInt(objs.length);
 		FatMapShapeObject obj = new FatMapShapeObject(layer, layer.getObjectId(), objs[rand], node);
 		obj.setX(x-width/2); obj.setY(y-height/2);

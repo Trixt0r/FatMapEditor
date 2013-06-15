@@ -168,26 +168,25 @@ public class FatMapShapeObject extends FatMapObject {
 		VerticesUtils.calcBBoxForVertices(line.getTransformedVertices(), this.boundingBox);
 	}
 
-	/*@Override
+	@Override
 	public void update() {
-		if(this.mapObject instanceof PolygonMapObject){
+		if(this.mapObject instanceof PolygonMapObject && this.getRotation() != this.tempAngle){
 			PolygonMapObject obj = (PolygonMapObject)this.mapObject;
 			obj.getPolygon().setPosition(0, 0);
-			//obj.getPolygon().setScale(1, 1);
 			obj.setPolygon(new Polygon(obj.getPolygon().getTransformedVertices()));
 			obj.getPolygon().setPosition(this.getX(), this.getY());
 			super.setScale(1);
-			//obj.getPolygon().setScale(this.getScaleX(), this.getScaleY());
+			super.setRotation(0);
 		}
-		else if(this.mapObject instanceof PolylineMapObject){
+		else if(this.mapObject instanceof PolylineMapObject && this.getRotation() != this.tempAngle){
 			PolylineMapObject obj = (PolylineMapObject)this.mapObject;
 			obj.getPolyline().setPosition(0, 0);
-			//obj.getPolyline().setScale(1, 1);
 			obj.setPolyline(new Polyline(obj.getPolyline().getTransformedVertices()));
 			obj.getPolyline().setPosition(this.getX(), this.getY());
 			super.setScale(1);
-			//obj.getPolyline().setScale(this.getScaleX(), this.getScaleY());
+			super.setRotation(0);
 		}
-	}*/
+		this.calcBBox();
+	}
 
 }

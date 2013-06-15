@@ -37,7 +37,7 @@ public abstract class FatMapObject extends Actor{
 	
 	public abstract void draw(ShapeRenderer renderer);
 	
-	//public abstract void update();
+	public abstract void update();
 	
 	protected abstract void calcBBox();
 	

@@ -15,7 +15,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Array;
 
 public class FatInputHandler implements InputProcessor {
@@ -25,12 +24,12 @@ public class FatInputHandler implements InputProcessor {
 	private FatCamera cam;
 	private CameraMover mover;
 	private boolean dragAble = false, scaleAble = false, rotateAble = false;
-	private boolean mapClicked = true;
-	private float clickedAngle = 0f;
+	private boolean mapClicked = true, dragOrigin = false;
+	private float clickedAngle = 0f, originDiffX = 0f, originDiffY =0f;
 	FatMapEditor editor;
 	private Rectangle selectionRect, selectionBBox;
-	private Vector2 center, centerOrigin;
-	private Label toolTip;
+	private Vector2 centerOrigin;
+	private int prevSize = 0;
 	
 	public static float HORIZONTAL_ACCELERATION = 10f, VERTICAL_ACCELERATION = 10f, ZOOM_SPEED = 0.25f;
 	
@@ -41,11 +40,8 @@ public class FatInputHandler implements InputProcessor {
 		this.layerWidget = editor.layerWidget;
 		this.selectionRect = new Rectangle();;
 		this.selectionBBox = new Rectangle();
-		this.center = new Vector2();
 		this.centerOrigin = new Vector2();
-		this.toolTip = new Label("Tooltip", FatMapEditor.skin);
-		this.toolTip.setVisible(false);
-		FatMapEditor.guiStage.addActor(toolTip);
+		this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
 	}
 
 	public boolean keyDown(int keycode) {
@@ -104,31 +100,35 @@ public class FatInputHandler implements InputProcessor {
 		this.mapClicked = true;
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
+		if(this.prevSize != this.selectedObjects.size){
+			this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
+			if(this.selectedObjects != null)
+				if(this.selectedObjects.size != 0)
+					this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
+			this.prevSize = this.selectedObjects.size;
+		}
 		
-		this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
+		if(button == Buttons.RIGHT && this.selectedObjects != null){
+			this.dragOrigin = this.selectedObjects.size > 0;
+			this.originDiffX = this.centerOrigin.x - v.x;
+			this.originDiffY = this.centerOrigin.y - v.y;
+			return true;
+		}
+		
 		
 		if(button == Buttons.MIDDLE){
-			if(this.selectedObjects == null){
-				this.mover.setX(this.cam.viewportWidth/2);
-				this.mover.setY(this.cam.viewportWidth/2);
-			}
-			else if(this.selectedObjects.size == 0){
-				this.mover.setX(this.cam.viewportWidth/2);
-				this.mover.setY(this.cam.viewportWidth/2);
-			}
-			else{
-				this.mover.setX(this.centerOrigin.x);//this.cam.viewportWidth/2);
-				this.mover.setY(this.centerOrigin.y);//this.cam.viewportHeight/2);
-			}
+			
+			this.mover.setX(this.centerOrigin.x);
+			this.mover.setY(this.centerOrigin.y);
 			return true;
 		}
 		
 		if(button == Buttons.LEFT && FatTransformer.currentTool == FatTransformer.TOOL.SELECTION){
 			this.selectionRect.set(v.x, v.y, 0f, 0f);
+			this.prevSize = 0;
 			if(this.selectedObjects != null && prevClicked && !Gdx.input.isKeyPressed(Keys.CONTROL_LEFT)){
 				for(FatMapObject object: this.selectedObjects)
 					object.select(false);
-				this.selectedObjects = null;
 			}
 		}
 		
@@ -139,9 +139,7 @@ public class FatInputHandler implements InputProcessor {
 		if(this.selectedObjects == null) return false;
 		if(this.selectedObjects.size == 0) return false;
 		
-		//this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
-		RectangleUtils.calcBBox(selectionBBox, selectedObjects);
-		this.center.set(selectionBBox.x+selectionBBox.width/2,selectionBBox.y+selectionBBox.height/2);
+		
 		Vector2 temp = new Vector2(this.centerOrigin);
 		this.clickedAngle = temp.sub(v.x,v.y).angle();
 		
@@ -167,9 +165,10 @@ public class FatInputHandler implements InputProcessor {
 		this.dragAble = false;
 		this.rotateAble = false;
 		this.scaleAble = false;
+		this.dragOrigin = false;
 		
 		for(FatMapObject object: this.selectedObjects){
-			//object.update();
+			object.update();
 			object.xDiff = 0;
 			object.yDiff = 0;
 			object.tempX = object.getX();
@@ -199,6 +198,13 @@ public class FatInputHandler implements InputProcessor {
 			
 			this.selectedObjects = this.editor.layerWidget.getSelectedObjects();
 			
+
+			this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
+			
+			if(this.selectedObjects.size != 0)
+				this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
+			this.prevSize = this.selectedObjects.size;
+			
 			this.selectionRect.set(0f, 0f, 0f, 0f);
 			return true;
 		}
@@ -211,6 +217,11 @@ public class FatInputHandler implements InputProcessor {
 		if(!this.mapClicked) return false;
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
+		
+		if(this.dragOrigin){
+			this.centerOrigin.set(v.x + this.originDiffX, v.y + this.originDiffY);
+			return true;
+		}
 		
 		if(!Gdx.input.isButtonPressed(Buttons.LEFT)) return false;
 		
@@ -269,13 +280,14 @@ public class FatInputHandler implements InputProcessor {
 	public void drawSelectRegion(ShapeRenderer renderer){
 		float alpha = 1f;
 		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = .25f;
-		else if(this.rotateAble){
-			renderer.setColor(1f, .75f, .75f, 1f);
-			renderer.line(centerOrigin.x-5,centerOrigin.y, centerOrigin.x+5, centerOrigin.y);
-			renderer.line(centerOrigin.x,centerOrigin.y-5, centerOrigin.x, centerOrigin.y+5);
+		else if((this.rotateAble || Gdx.input.isButtonPressed(Buttons.RIGHT)) && this.selectedObjects != null){
+			if(this.selectedObjects.size != 0){
+				renderer.setColor(1f, .75f, .75f, 1f);
+				renderer.line(centerOrigin.x-5,centerOrigin.y, centerOrigin.x+5, centerOrigin.y);
+				renderer.line(centerOrigin.x,centerOrigin.y-5, centerOrigin.x, centerOrigin.y+5);
+			}
 		}
 		renderer.setColor(1f, .75f, .75f, alpha);
-		renderer.rect(this.selectionRect.x, this.selectionRect.y, this.selectionRect.width, this.selectionRect.height);
 	}
 	
 	private void selectFromRect(){

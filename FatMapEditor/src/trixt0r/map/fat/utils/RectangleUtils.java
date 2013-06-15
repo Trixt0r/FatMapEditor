@@ -35,7 +35,6 @@ public class RectangleUtils {
 	
 	public static Vector2 getOrigin(Array<FatMapObject> objects){
 		Vector2 origin = new Vector2();
-		if(objects == null) return origin;
 		Rectangle rect;
 		for(FatMapObject object: objects){
 			rect = object.getBBox();

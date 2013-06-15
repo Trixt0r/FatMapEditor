@@ -157,6 +157,7 @@ public class FatMapEditor implements ApplicationListener {
 				}
 				this.inputHandler.drawSelectRegion(renderer);
 			this.renderer.end();
+			
 			this.renderer.begin(ShapeType.Line);
 			
 				for(Node node: this.layerWidget.layerTree.getNodes()){
