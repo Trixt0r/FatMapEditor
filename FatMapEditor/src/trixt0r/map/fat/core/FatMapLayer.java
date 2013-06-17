@@ -22,6 +22,7 @@ public class FatMapLayer extends Group {
 	
 	
 	public FatMapLayer(int id, String name){
+		super.setVisible(false);
 		this.id = id;
 		this.name = name;
 		this.objects = new Array<FatMapObject>();

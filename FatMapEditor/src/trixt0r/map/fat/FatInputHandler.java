@@ -1,9 +1,11 @@
 package trixt0r.map.fat;
 
-import trixt0r.map.fat.FatMapEditor.CameraMover;
+import trixt0r.map.fat.core.FatMapStage;
+import trixt0r.map.fat.core.FatMapStage.CameraMover;
 import trixt0r.map.fat.core.FatMapLayer;
 import trixt0r.map.fat.core.FatMapObject;
 import trixt0r.map.fat.utils.RectangleUtils;
+import trixt0r.map.fat.widget.WidgetStage;
 import trixt0r.map.fat.widget.layer.LayerWidget;
 
 import com.badlogic.gdx.Gdx;
@@ -26,18 +28,20 @@ public class FatInputHandler implements InputProcessor {
 	private boolean dragAble = false, scaleAble = false, rotateAble = false;
 	private boolean mapClicked = true, dragOrigin = false;
 	private float clickedAngle = 0f, originDiffX = 0f, originDiffY =0f;
-	FatMapEditor editor;
 	private Rectangle selectionRect, selectionBBox;
 	private Vector2 centerOrigin;
 	private int prevSize = 0;
+	private FatMapStage map;
+	private WidgetStage gui;
 	
 	public static float HORIZONTAL_ACCELERATION = 10f, VERTICAL_ACCELERATION = 10f, ZOOM_SPEED = 0.25f;
 	
-	public FatInputHandler(FatMapEditor editor){
-		this.editor = editor;
-		this.cam = editor.mapCamera;
-		this.mover = editor.mover;
-		this.layerWidget = editor.layerWidget;
+	public FatInputHandler(FatMapStage map, WidgetStage gui){
+		this.map = map;
+		this.gui = gui;
+		this.cam = (FatCamera) map.getCamera();
+		this.mover = map.mover();
+		this.layerWidget = gui.layerWidget;
 		this.selectionRect = new Rectangle();;
 		this.selectionBBox = new Rectangle();
 		this.centerOrigin = new Vector2();
@@ -95,8 +99,8 @@ public class FatInputHandler implements InputProcessor {
 			int button) {
 		boolean prevClicked = this.mapClicked;
 		this.mapClicked = false;
-		if(this.editor.guiHasFocus()) return false;
-		FatMapEditor.guiStage.unfocusAll();
+		if(this.gui.hasFocus()) return false;
+		this.gui.unfocusAll();
 		this.mapClicked = true;
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
@@ -117,7 +121,6 @@ public class FatInputHandler implements InputProcessor {
 		
 		
 		if(button == Buttons.MIDDLE){
-			
 			this.mover.setX(this.centerOrigin.x);
 			this.mover.setY(this.centerOrigin.y);
 			return true;
@@ -196,7 +199,7 @@ public class FatInputHandler implements InputProcessor {
 			
 			this.selectFromRect();
 			
-			this.selectedObjects = this.editor.layerWidget.getSelectedObjects();
+			this.selectedObjects = this.gui.getSelectedObjects();
 			
 
 			this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
@@ -255,7 +258,7 @@ public class FatInputHandler implements InputProcessor {
 	@Override
 	public boolean scrolled(int amount) {
 		if(!this.mapClicked) return false;
-		FatMapEditor.guiStage.unfocusAll();
+		this.gui.unfocusAll();
 		
 		this.cam.setFollowSpeed(0.1f, 0.1f);
 		Vector3 v = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0f);
@@ -288,10 +291,11 @@ public class FatInputHandler implements InputProcessor {
 			}
 		}
 		renderer.setColor(1f, .75f, .75f, alpha);
+		renderer.rect(this.selectionRect.x, this.selectionRect.y, this.selectionRect.width, this.selectionRect.height);
 	}
 	
 	private void selectFromRect(){
-		for(Actor actor: FatMapEditor.mapStage.getActors()){
+		for(Actor actor: this.map.getActors()){
 			if(!(actor instanceof FatMapLayer)) continue;
 			FatMapLayer layer = (FatMapLayer) actor;
 			for(FatMapObject obj: layer.objects){

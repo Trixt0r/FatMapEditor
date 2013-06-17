@@ -1,5 +1,6 @@
 package trixt0r.map.fat.widget.layer;
 
+import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.widget.layer.actions.LayerWidgetAddLayer;
 
 import com.badlogic.gdx.Input.Keys;
@@ -18,9 +19,13 @@ public class NewLayerDialog extends Dialog{
 	public final TextField field;
 	public final TextButton buttonOk, buttonCancel;
 	public Tree tree;
+	private final Skin skin;
+	private final FatMapEditor editor;
 
-	public NewLayerDialog(String title, Skin skin, Tree tree) {
-		super(title, skin);
+	public NewLayerDialog(String title, FatMapEditor editor, Tree tree) {
+		super(title, editor.getSkin());
+		this.editor = editor;
+		this.skin = editor.getSkin();
 		this.tree = tree;
 		this.field = new TextField("Layer "+(tree.getNodes().size+1), skin);
 		this.buttonOk = new TextButton("Create", skin);
@@ -36,7 +41,7 @@ public class NewLayerDialog extends Dialog{
 	public void result(Object object){
 		if(this.getColor().a != 1) cancel();
 		if(object == this.field && this.getColor().a == 1){
-			new LayerWidgetAddLayer(tree, field.getText()).act(0);
+			new LayerWidgetAddLayer(tree, field.getText(), this.editor).act(0);
 			this.getStage().unfocus(this);
 		}
 	}

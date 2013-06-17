@@ -15,10 +15,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Tree;
 public class LayerWidgetAddLayer extends LayerWidgetAction{
 
 	public String name;
+	private final FatMapEditor editor;
 	
-	public LayerWidgetAddLayer(Tree layerTree, String name) {
+	public LayerWidgetAddLayer(Tree layerTree, String name, FatMapEditor editor) {
 		super(layerTree);
 		this.name = name;
+		this.editor = editor;
 	}
 
 	/**
@@ -27,12 +29,12 @@ public class LayerWidgetAddLayer extends LayerWidgetAction{
 	@Override
 	public boolean act(float delta) {
 		if(this.name == null) return false;
-		Label label = new Label(this.name, FatMapEditor.skin);
+		Label label = new Label(this.name, this.editor.getSkin());
 		FatMapLayer layer = new FatMapLayer(FatMapLayer.getLayerId(), this.name);
-		FatMapEditor.mapStage.addActor(layer);
+		this.editor.getMap().addActor(layer);
 		LayerNode node = new LayerNode(label, layer);
 		this.layerTree.add(node);
-		node.add(new ButtonNode(FatMapEditor.skin));
+		node.add(new ButtonNode(this.editor.getSkin()));
 		this.layerTree.getSelection().clear();
 		this.layerTree.getSelection().add(node);
 		return true;

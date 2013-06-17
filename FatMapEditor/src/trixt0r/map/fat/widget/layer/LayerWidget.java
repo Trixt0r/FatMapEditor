@@ -1,5 +1,6 @@
 package trixt0r.map.fat.widget.layer;
 
+import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.core.FatMapObject;
 import trixt0r.map.fat.widget.FatWidget;
 import trixt0r.map.fat.widget.RemoveDialog;
@@ -10,9 +11,8 @@ import trixt0r.map.fat.widget.layer.nodes.LayerNode;
 import trixt0r.map.fat.widget.layer.nodes.ObjectNode;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Tree;
 import com.badlogic.gdx.scenes.scene2d.ui.Tree.Node;
@@ -22,7 +22,6 @@ import com.badlogic.gdx.utils.Array;
 public class LayerWidget extends FatWidget{
 	
 	public final Tree layerTree;
-	//public final Table layerTable;
 	public final TextButton addLayerButton;
 	public final TextButton deleteLayerButton;
 	public final NewLayerDialog newLayerDialog;
@@ -32,16 +31,16 @@ public class LayerWidget extends FatWidget{
 	public boolean fadeOut = false;
 	private Node selectedLayer;
 	
-	public LayerWidget(Stage stage, Skin skin){
-		super(stage, skin);
+	public LayerWidget(FatMapEditor editor){
+		super(editor);
 		
 		layerTree = new Tree(skin);
 		window.setTitle("Layers");
 		
 		addLayerButton = new TextButton("ADD", skin);
 		deleteLayerButton = new TextButton("DELETE", skin);
-		newLayerDialog = new NewLayerDialog("New layer",skin, layerTree);
-		newObjectDialog = new NewLayerObjectDialog(skin);
+		newLayerDialog = new NewLayerDialog("New layer", this.editor, layerTree);
+		newObjectDialog = new NewLayerObjectDialog(super.skin, (OrthographicCamera) editor.getMap().getCamera());
 		removeDialog = new RemoveDialog("Delete layer",skin, layerTree, "Do you really want to remove this layer?");
 		
 		Dialog.fadeDuration = 0.2f;
@@ -119,7 +118,7 @@ public class LayerWidget extends FatWidget{
 			if(deleteLayerButton.isPressed() && this.removeDialog != this.stage.getScrollFocus()){
 				removeDialog.setTitle("Remove layer");
 				removeDialog.setQuestion("Do you really want to remove " + /*((layerNodes.size == 1) ? "*/"this layer"/*" : "these layers") */ + "?");
-				removeDialog.setRemoveAction(new LayerWidgetRemoveLayer(layerTree, new Array<Node>(new Node[] {this.selectedLayer})));
+				removeDialog.setRemoveAction(new LayerWidgetRemoveLayer(layerTree, new Array<Node>(new Node[] {this.selectedLayer}), this.editor.getMap()));
 				removeDialog.show(stage);
 			}
 		}

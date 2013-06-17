@@ -5,8 +5,6 @@ import trixt0r.map.fat.FatTransformer;
 import trixt0r.map.fat.widget.FatWidget;
 import trixt0r.map.fat.widget.LabelTextField;
 
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldFilter;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
@@ -16,8 +14,8 @@ public class ControllerWidget extends FatWidget {
 	
 	public final LabelTextField xOffset, yOffset;
 	
-	public ControllerWidget(Stage stage, Skin skin){
-		super(stage, skin);
+	public ControllerWidget(FatMapEditor editor){
+		super(editor);
 		
 		this.xOffset = new LabelTextField("Grid - xoffset: ", skin, 48, ""+FatMapEditor.GRID_XOFFSET);
 		this.xOffset.field.setTextFieldFilter(new TextFieldFilter.DigitsOnlyFilter());

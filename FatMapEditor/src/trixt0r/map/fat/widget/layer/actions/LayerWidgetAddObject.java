@@ -2,7 +2,6 @@ package trixt0r.map.fat.widget.layer.actions;
 
 import java.util.Random;
 
-import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.core.FatMapLayer;
 import trixt0r.map.fat.core.FatMapShapeObject;
 import trixt0r.map.fat.widget.layer.nodes.LayerNode;
@@ -17,6 +16,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Polyline;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Tree.Node;;
 
 /**
@@ -27,17 +27,19 @@ public class LayerWidgetAddObject extends LayerWidgetObjectAction {
 
 	public String name;
 	public float x,y, xscale, yscale, alpha, angle;
+	private final Skin skin;
 	
-	public LayerWidgetAddObject(LayerNode root, String name) {
+	public LayerWidgetAddObject(LayerNode root, String name, Skin skin) {
 		super(root);
 		this.name = name;
+		this.skin = skin;
 	}
 
 	@Override
 	public boolean act(float delta) {
 		if(this.name == null) return false;
 		
-		Label label = new Label(this.name, FatMapEditor.skin);
+		Label label = new Label(this.name, this.skin);
 		ObjectNode node = new ObjectNode(label,root, null);
 		FatMapLayer layer = root.layer;
 		float width = 10f*xscale, height = 10f*yscale;

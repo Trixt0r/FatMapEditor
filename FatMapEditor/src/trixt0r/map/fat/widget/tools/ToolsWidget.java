@@ -4,16 +4,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton.ImageButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
+import trixt0r.map.fat.FatMapEditor;
 import trixt0r.map.fat.FatTransformer;
 import trixt0r.map.fat.widget.FatWidget;
 
@@ -26,8 +25,8 @@ public class ToolsWidget extends FatWidget implements Disposable{
 	
 	private Texture creationIcon, selectionIcon, translationIcon, scalingIcon, roationIcon, erasingIcon, flipHorIcon, flipVerIcon;
 
-	public ToolsWidget(Stage stage, Skin skin) {
-		super(stage, skin);
+	public ToolsWidget(FatMapEditor editor) {
+		super(editor);
 		this.window.setClip(true);
 		this.window.setMovable(true);
 		this.window.setTitleAlignment(Align.left);

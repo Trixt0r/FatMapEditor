@@ -1,5 +1,7 @@
 package trixt0r.map.fat.widget;
 
+import trixt0r.map.fat.FatMapEditor;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -18,10 +20,12 @@ public abstract class FatWidget extends WidgetGroup {
 	public final Skin skin;
 	public final ScrollPane scrollPane;
 	public final Table table;
+	public final FatMapEditor editor;
 	
-	public FatWidget(Stage stage, Skin skin){
-		this.skin = skin;
-		this.stage = stage;
+	public FatWidget(FatMapEditor editor){
+		this.editor = editor;
+		this.skin = this.editor.getSkin();
+		this.stage = this.editor.getGui();
 		this.window = new Window("", skin);
 		this.table = new Table();
 		this.scrollPane = new ScrollPane(table, skin);

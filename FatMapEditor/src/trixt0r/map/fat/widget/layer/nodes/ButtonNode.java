@@ -1,7 +1,5 @@
 package trixt0r.map.fat.widget.layer.nodes;
 
-import trixt0r.map.fat.FatMapEditor;
-
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -17,8 +15,8 @@ public class ButtonNode extends Node{
 	
 	public ButtonNode(Skin skin) {
 		super(new LayerButtonGroup());
-		this.buttonAdd = new TextButton("Add", FatMapEditor.skin);
-		this.buttonDel = new TextButton("Delete", FatMapEditor.skin);
+		this.buttonAdd = new TextButton("Add", skin);
+		this.buttonDel = new TextButton("Delete", skin);
 		this.buttonGroup = (LayerButtonGroup)super.getActor();
 		this.buttonGroup.addActor(this.buttonAdd);
 		this.buttonDel.setPosition(0, 0);
