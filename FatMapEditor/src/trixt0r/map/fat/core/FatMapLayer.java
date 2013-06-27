@@ -1,18 +1,24 @@
 package trixt0r.map.fat.core;
 
+import trixt0r.map.fat.transform.TransformBox;
+import trixt0r.map.fat.utils.FatShapeDrawer;
 import trixt0r.map.fat.utils.RectangleUtils;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Array;
 
 public class FatMapLayer extends Group {
+	public static final Color BOX_COLOR = new Color(1,1,0,1);
+
 	private static int LAYER_ID;
 	
 	public final int id;
 	public String name;
 	public final Rectangle bbox, selectionBBox;
+	public final TransformBox selectionBox;
 	public boolean isCurrentLayer = false;
 	
 	private int objectId;
@@ -30,25 +36,22 @@ public class FatMapLayer extends Group {
 		this.objectId = 0;
 		this.bbox = new Rectangle();
 		this.selectionBBox = new Rectangle();
+		this.selectionBox = new TransformBox();
 	}
 	
 	public void draw(ShapeRenderer renderer){
 		for(FatMapObject object: this.objects)
 			object.draw(renderer);
-		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Line){
 			if(this.isCurrentLayer){
-				renderer.setColor(FatMapObject.DESELECTED);
-				renderer.rect(bbox.x, bbox.y, bbox.width, bbox.height);
-				renderer.setColor(FatMapObject.SELECTED);
-				renderer.rect(selectionBBox.x, selectionBBox.y, selectionBBox.width, selectionBBox.height);
-				
-				float midX = selectionBBox.x+selectionBBox.width/2;
-				float midY = selectionBBox.y+selectionBBox.height/2;
-				
-				renderer.line(midX-5, midY, midX+5, midY);
-				renderer.line(midX, midY-5, midX, midY+5);
+				if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Line){
+					renderer.setColor(FatMapObject.DESELECTED);
+					FatShapeDrawer.drawRectangle(renderer, bbox);
+					renderer.setColor(FatMapObject.SELECTED);
+					FatShapeDrawer.drawRectangle(renderer, selectionBBox);
+				}
+				renderer.setColor(BOX_COLOR);
+				this.selectionBox.draw(renderer);
 			}
-		}
 	}
 	
 	public void addObject(FatMapObject object){
@@ -94,6 +97,8 @@ public class FatMapLayer extends Group {
 	
 	private void calcSelectionBBox(){
 		RectangleUtils.calcBBox(this.selectionBBox, this.getSelectedObjects());
+		if(!this.getSelectedObjects().equals(this.selectionBox.objects))
+			this.selectionBox.setObjects(this.getSelectedObjects());
 	}
 	
 	public Array<FatMapObject> getSelectedObjects(){

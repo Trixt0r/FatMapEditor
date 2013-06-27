@@ -1,11 +1,12 @@
 package trixt0r.map.fat.core;
 
+import trixt0r.map.fat.transform.FatBox;
 import trixt0r.map.fat.widget.layer.nodes.ObjectNode;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public abstract class FatMapObject extends Actor{
@@ -14,32 +15,45 @@ public abstract class FatMapObject extends Actor{
 	
 	public FatMapLayer layer;
 	public final int id;
-	public final MapObject mapObject;
 	public boolean moveable;
-	public float xDiff, yDiff, tempWidth, tempHeight, tempAngle, tempX, tempY, tempScaleX, tempScaleY;
+	public float tempAngle, tempX, tempY, tempScaleX, tempScaleY, tempWidth, tempHeight;
+	private float parentX, parentY;
 	protected ObjectNode node;
 	protected boolean selected;
 	public boolean isOnSelectedLayer;
 	protected Rectangle boundingBox;
 	protected float originXRel, originYRel;
-	private boolean dirty = false;
+	public final FatBox parent;
+	private static final Vector2 temp = new Vector2();
 	
-	public FatMapObject(FatMapLayer layer, int id, MapObject mapObject, ObjectNode node){
+	public FatMapObject(FatMapLayer layer, int id, ObjectNode node){
 		this.layer = layer;
 		this.id = id;
-		this.mapObject = mapObject;
 		this.selected = false;
 		this.moveable = true;
 		this.node = node;
 		node.object = this;
 		this.boundingBox = new Rectangle();
+		this.calcBBox();
+		this.parent = new FatBox();
+		this.parent.set(boundingBox);
+		
+	}
+	
+	protected void setUpRelPos(){
+		this.parentX = this.getX()-this.parent.getX();
+		this.parentY = this.getY()-this.parent.getY();
 	}
 	
 	public abstract void draw(ShapeRenderer renderer);
 	
 	public abstract void update();
 	
-	protected abstract void calcBBox();
+	public abstract void calcBBox();
+	
+	protected abstract void setObjectRotation(float angle);
+	protected abstract void setObjectPosition(float x, float y);
+	protected abstract void setObjectScale(float scaleX, float scaleY);
 	
 	public void select(boolean select){
 		this.selected = select;
@@ -58,32 +72,42 @@ public abstract class FatMapObject extends Actor{
 		this.layer.removeObject(this);
 	}
 	
-	@Override
-	public void setX(float x){
-		if(!this.moveable) return;
-		super.setX(x);
-		this.dirty = true;
+	protected void updateToParent() {
+		this.setObjectRotation(this.parent.getAngle());
+		temp.set(this.parentX*this.parent.getScaleX(),
+				this.parentY*this.parent.getScaleY()).
+				rotate(this.parent.getAngle()).
+				add(this.parent.getX(), this.parent.getY());
+		this.setObjectPosition(temp.x, temp.y);
+		this.setObjectScale(this.parent.getScaleX(), this.parent.getScaleY());
 	}
 	
 	@Override
+	public void setX(float x){
+		if(!this.moveable) return;
+		this.parent.setX(x);
+		this.updateToParent();
+	}
+
+	@Override
 	public void setY(float y){
 		if(!this.moveable) return;
-		super.setY(y);
-		this.dirty = true;
+		this.parent.setY(y);
+		this.updateToParent();
 	}
 	
 	@Override
 	public void setWidth(float width){
 		if(!this.moveable) return;
-		super.setWidth(width);
-		this.dirty = true;
+		this.parent.setWidth(width);
+		this.updateToParent();
 	}
 	
 	@Override
 	public void setHeight(float height){
 		if(!this.moveable) return;
-		super.setHeight(height);
-		this.dirty = true;
+		this.parent.setHeight(height);
+		this.updateToParent();
 	}
 	
 	@Override
@@ -92,22 +116,29 @@ public abstract class FatMapObject extends Actor{
 		this.setY(y);
 	}
 	
-	public void setOriginRel(float x, float y){
-		this.originXRel = x;
-		this.originYRel = y;
-	}
-	
 	public Rectangle getBBox(){
-		if(this.dirty){
-			this.dirty = false;
-			this.calcBBox();
-		}
 		return this.boundingBox;
 	}
 	
 	@Override
 	public void setRotation(float degrees){
-		super.setRotation(degrees);
+		if(!this.moveable) return;
+		this.parent.setAngle(degrees);
+		this.updateToParent();
+	}
+	
+	@Override
+	public void setScaleX(float scaleX){
+		if(!this.moveable) return;
+		this.parent.setScaleX(scaleX);
+		this.updateToParent();
+	}
+	
+	@Override
+	public void setScaleY(float scaleY){
+		if(!this.moveable) return;
+		this.parent.setScaleY(scaleY);
+		this.updateToParent();
 	}
 	
 	public void setScale(float scaleX, float scaleY){
@@ -123,16 +154,27 @@ public abstract class FatMapObject extends Actor{
 		this.setScaleY(scale);
 	}
 	
-	@Override
-	public void setScaleX(float scaleX){
-		if(!this.moveable) return;
-		super.setScaleX(scaleX);
+	public void setUpTempValues(){
+		this.tempScaleX = this.parent.getScaleX();
+		this.tempScaleY = this.parent.getScaleY();
+		this.tempAngle = this.parent.getAngle();
+		this.tempWidth = this.parent.getWidth();
+		this.tempHeight= this.parent.getHeight();
 	}
 	
-	@Override
-	public void setScaleY(float scaleY){
-		if(!this.moveable) return;
-		super.setScaleY(scaleY);
+	public void applyTempValues(){
+		this.setX(this.tempX);
+		this.setY(this.tempY);
+		this.setRotation(this.tempAngle);
+		this.setWidth(this.tempWidth);
+		this.setHeight(this.tempHeight);
+		this.setScale(this.tempScaleX, this.tempScaleY);
+	}
+	
+	public void resetTemps(){
+		this.tempAngle = 0;
+		this.tempScaleX = 1;
+		this.tempScaleY = 1;
 	}
 	
 }

@@ -51,5 +51,9 @@ public class RectangleUtils {
 		Rectangle over = new Rectangle(minX,minY,maxX - minX,maxY - minY);
 		return rect2.overlaps(over);
 	}
+	
+	public static boolean rectangleHasSize(Rectangle rect){
+		return Math.abs(rect.width) > 0 && Math.abs(rect.height) > 0;
+	}
 
 }

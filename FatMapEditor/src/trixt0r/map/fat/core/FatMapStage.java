@@ -27,7 +27,6 @@ public class FatMapStage extends Stage{
 		this.mover.setX(this.getWidth()/2);
 		this.mover.setY(this.getHeight()/2);
 		this.addActor(mover);
-		
 		this.camera = new FatCamera(0.25f,0.25f);
 		this.camera.setToFollow(mover);
 		this.camera.setInterpolationX(Interpolation.linear);
@@ -62,6 +61,7 @@ public class FatMapStage extends Stage{
 					layer.draw(this.renderer);
 				this.input.drawSelectRegion(this.renderer);
 				this.drawGrid();
+				this.input.drawSelectRegion(this.renderer);
 			this.renderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}

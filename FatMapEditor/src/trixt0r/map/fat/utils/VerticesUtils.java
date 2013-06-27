@@ -29,16 +29,9 @@ public class VerticesUtils {
 	}
 	
 	public static Vector2 getCenterForVertices(float[] vertices){
-		Vector2 center = new Vector2();
-		final float numFloats = vertices.length;
-		for (int i = 0; i < numFloats; i += 2) {
-			center.x += vertices[i];
-			center.y += vertices[i+1];
-		}
-		
-		center.scl(1/numFloats);
-		
-		return center;
+		Rectangle rect = new Rectangle();
+		calcBBoxForVertices(vertices, rect);
+		return new Vector2(rect.x+rect.width/2, rect.y+rect.height/2);
 	}
 	
 	public static Vector2 getCenterForMapObject(MapObject mapObject){
@@ -47,7 +40,6 @@ public class VerticesUtils {
 		else if(mapObject instanceof PolylineMapObject)
 			return getCenterForVertices(((PolylineMapObject)mapObject).getPolyline().getTransformedVertices());
 		else return null;
-		
 	}
 
 }

@@ -4,6 +4,8 @@ import trixt0r.map.fat.core.FatMapStage;
 import trixt0r.map.fat.core.FatMapStage.CameraMover;
 import trixt0r.map.fat.core.FatMapLayer;
 import trixt0r.map.fat.core.FatMapObject;
+import trixt0r.map.fat.transform.TransformBox;
+import trixt0r.map.fat.transform.TransformerPoint;
 import trixt0r.map.fat.utils.RectangleUtils;
 import trixt0r.map.fat.widget.WidgetStage;
 import trixt0r.map.fat.widget.layer.LayerWidget;
@@ -25,14 +27,14 @@ public class FatInputHandler implements InputProcessor {
 	private Array<FatMapObject> selectedObjects;
 	private FatCamera cam;
 	private CameraMover mover;
-	private boolean dragAble = false, scaleAble = false, rotateAble = false;
+	private boolean dragAble = false, scaleAble = false, rotateAble = false, prevClicked = false;
 	private boolean mapClicked = true, dragOrigin = false;
-	private float clickedAngle = 0f, originDiffX = 0f, originDiffY =0f;
-	private Rectangle selectionRect, selectionBBox;
-	private Vector2 centerOrigin;
-	private int prevSize = 0;
+	private float originDiffX = 0f, originDiffY =0f;
+	private Rectangle selectionRect;
+	private TransformBox selectionBox;
 	private FatMapStage map;
 	private WidgetStage gui;
+	private TransformerPoint clickedPoint;
 	
 	public static float HORIZONTAL_ACCELERATION = 10f, VERTICAL_ACCELERATION = 10f, ZOOM_SPEED = 0.25f;
 	
@@ -42,10 +44,8 @@ public class FatInputHandler implements InputProcessor {
 		this.cam = (FatCamera) map.getCamera();
 		this.mover = map.mover();
 		this.layerWidget = gui.layerWidget;
-		this.selectionRect = new Rectangle();;
-		this.selectionBBox = new Rectangle();
-		this.centerOrigin = new Vector2();
-		this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
+		this.selectionRect = new Rectangle();
+		this.selectedObjects = new Array<FatMapObject>();
 	}
 
 	public boolean keyDown(int keycode) {
@@ -53,10 +53,10 @@ public class FatInputHandler implements InputProcessor {
 			Gdx.app.exit();
 		if(!this.mapClicked) return false;
 		if(keycode == Keys.SPACE) FatTransformer.snapToGrid = true;
-		if(keycode == Keys.LEFT) FatTransformer.translateRelative(selectedObjects, (FatTransformer.snapToGrid) ? -FatMapEditor.GRID_XOFFSET: -1f, 0f);
-		if(keycode == Keys.RIGHT) FatTransformer.translateRelative(selectedObjects, (FatTransformer.snapToGrid) ? FatMapEditor.GRID_XOFFSET : 1f, 0f);
-		if(keycode == Keys.UP) FatTransformer.translateRelative(selectedObjects, 0, (FatTransformer.snapToGrid) ? FatMapEditor.GRID_YOFFSET : 1f);
-		if(keycode == Keys.DOWN) FatTransformer.translateRelative(selectedObjects, 0, (FatTransformer.snapToGrid) ? -FatMapEditor.GRID_YOFFSET: -1f);
+		if(keycode == Keys.LEFT) FatTransformer.translateRelative(this.selectionBox, (FatTransformer.snapToGrid) ? -FatMapEditor.GRID_XOFFSET: -1f, 0f);
+		if(keycode == Keys.RIGHT) FatTransformer.translateRelative(this.selectionBox, (FatTransformer.snapToGrid) ? FatMapEditor.GRID_XOFFSET : 1f, 0f);
+		if(keycode == Keys.UP) FatTransformer.translateRelative(this.selectionBox, 0, (FatTransformer.snapToGrid) ? FatMapEditor.GRID_YOFFSET : 1f);
+		if(keycode == Keys.DOWN) FatTransformer.translateRelative(this.selectionBox, 0, (FatTransformer.snapToGrid) ? -FatMapEditor.GRID_YOFFSET: -1f);
 		
 		if(keycode == Keys.F1) {
 			this.layerWidget.fadeOut = !this.layerWidget.fadeOut;
@@ -97,122 +97,107 @@ public class FatInputHandler implements InputProcessor {
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer,
 			int button) {
-		boolean prevClicked = this.mapClicked;
+		this.dragAble = false;
+		this.rotateAble = false;
+		this.scaleAble = false;
+		this.prevClicked = this.mapClicked;
 		this.mapClicked = false;
 		if(this.gui.hasFocus()) return false;
 		this.gui.unfocusAll();
 		this.mapClicked = true;
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
-		if(this.prevSize != this.selectedObjects.size){
-			this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
-			if(this.selectedObjects != null)
-				if(this.selectedObjects.size != 0)
-					this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
-			this.prevSize = this.selectedObjects.size;
-		}
 		
-		if(button == Buttons.RIGHT && this.selectedObjects != null){
+		if(button == Buttons.RIGHT && this.selectedObjects != null && this.selectionBox != null){
 			this.dragOrigin = this.selectedObjects.size > 0;
-			this.originDiffX = this.centerOrigin.x - v.x;
-			this.originDiffY = this.centerOrigin.y - v.y;
+			this.originDiffX = this.selectionBox.center.x - v.x;
+			this.originDiffY = this.selectionBox.center.y - v.y;
 			return true;
 		}
 		
 		
-		if(button == Buttons.MIDDLE){
-			this.mover.setX(this.centerOrigin.x);
-			this.mover.setY(this.centerOrigin.y);
+		if(button == Buttons.MIDDLE && this.selectionBox != null){
+			this.mover.setX(this.selectionBox.center.x);
+			this.mover.setY(this.selectionBox.center.y);
 			return true;
 		}
 		
 		if(button == Buttons.LEFT && FatTransformer.currentTool == FatTransformer.TOOL.SELECTION){
 			this.selectionRect.set(v.x, v.y, 0f, 0f);
-			this.prevSize = 0;
-			if(this.selectedObjects != null && prevClicked && !Gdx.input.isKeyPressed(Keys.CONTROL_LEFT)){
+			if(this.selectedObjects != null && !Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) && this.prevClicked)
 				for(FatMapObject object: this.selectedObjects)
 					object.select(false);
-			}
 		}
 		
-		this.dragAble = FatTransformer.currentTool == FatTransformer.TOOL.TRANSLATION;
-		this.scaleAble = FatTransformer.currentTool == FatTransformer.TOOL.SCALING;
-		this.rotateAble = FatTransformer.currentTool == FatTransformer.TOOL.ROTATION;
+		this.dragAble = FatTransformer.currentTool == FatTransformer.TOOL.TRANSLATION && this.prevClicked;
+		this.scaleAble = FatTransformer.currentTool == FatTransformer.TOOL.SCALING && this.prevClicked;
+		this.rotateAble = FatTransformer.currentTool == FatTransformer.TOOL.ROTATION && this.prevClicked;
+		
+		if(button == Buttons.LEFT && FatTransformer.currentTool == FatTransformer.TOOL.ERASING && this.selectionBox != null){
+			this.clickedPoint = this.selectionBox.getNearestPoint(v.x, v.y);
+			this.selectionBox.setUpTempValues();
+			this.selectionBox.xDiff = this.selectionBox.getX() - v.x;
+			this.selectionBox.yDiff = this.selectionBox.getY() - v.y;
+			if(this.clickedPoint != null){
+				this.clickedPoint.setClicked(true);
+				this.clickedPoint.click(v.x, v.y);
+				this.rotateAble = this.clickedPoint.equals(this.selectionBox.rotation);
+			} else this.dragAble = true;
+		}
 		if(!this.mapClicked) return false;
-		if(this.selectedObjects == null) return false;
 		if(this.selectedObjects.size == 0) return false;
+		this.selectionBox = this.selectedObjects.get(0).layer.selectionBox;
+		this.selectionBox.setUpTempValues();
+		this.selectionBox.xDiff = this.selectionBox.getX() - v.x;
+		this.selectionBox.yDiff = this.selectionBox.getY() - v.y;
 		
-		
-		Vector2 temp = new Vector2(this.centerOrigin);
-		this.clickedAngle = temp.sub(v.x,v.y).angle();
-		
-		for(FatMapObject object: this.selectedObjects){
-			object.xDiff = object.getX() - v.x;
-			object.yDiff = object.getY() - v.y;
-			object.tempX = object.getX();
-			object.tempY = object.getY();
-			object.tempWidth = object.getWidth();
-			object.tempHeight = object.getHeight();
-			object.tempAngle = object.getRotation();
-			object.tempScaleX = object.getScaleX();
-			object.tempScaleY = object.getScaleY();
-		}
+		Vector2 temp = new Vector2(this.selectionBox.center);
+		this.selectionBox.clickedAngle = temp.sub(v.x, v.y).angle();
 		
 		return true;
 	}
 
 	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer,
-			int button) {
-		if(!this.mapClicked) return false;
-		this.dragAble = false;
-		this.rotateAble = false;
-		this.scaleAble = false;
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		this.dragOrigin = false;
-		
-		for(FatMapObject object: this.selectedObjects){
-			object.update();
-			object.xDiff = 0;
-			object.yDiff = 0;
-			object.tempX = object.getX();
-			object.tempY = object.getY();
-			object.tempWidth = object.getWidth();
-			object.tempHeight = object.getHeight();
-			object.tempScaleX = object.getScaleX();
-			object.tempScaleY = object.getScaleY();
-			object.tempAngle = 0;
+		if(this.clickedPoint != null) this.clickedPoint.setClicked(false);
+		this.clickedPoint = null;
+		/*for(FatMapObject object: this.selectedObjects)
+			object.update();*/
+		if(button == Buttons.LEFT){
+			if(FatTransformer.currentTool == FatTransformer.TOOL.SELECTION && this.prevClicked){
+				Vector3 v = new Vector3(screenX, screenY,0f);
+				this.cam.unproject(v);
+				this.selectionRect.width = v.x-this.selectionRect.x;
+				this.selectionRect.height = v.y-this.selectionRect.y;
+				
+				float left = Math.min(this.selectionRect.x+this.selectionRect.width, this.selectionRect.x);
+				float bottom = Math.min(this.selectionRect.y+this.selectionRect.height, this.selectionRect.y);
+				float right = Math.max(this.selectionRect.x+this.selectionRect.width, this.selectionRect.x);
+				float top = Math.max(this.selectionRect.y+this.selectionRect.height, this.selectionRect.y);
+				this.selectionRect.set(left, bottom, right-left, top-bottom);
+				
+				this.selectFromRect();
+				
+				this.setSelectedObjects(this.gui.getSelectedObjects());
+				
+				this.selectionRect.set(0f, 0f, 0f, 0f);
+				if(this.selectedObjects.size != 0){
+					this.selectedObjects.get(0).layer.act(0);
+					this.selectedObjects.get(0).layer.selectionBox.update();
+					this.selectedObjects.get(0).layer.selectionBox.updateCenter();
+				}
+				
+				//this.center.set(this.selectionBox.center);
+			}
 		}
 		
-		this.selectionBBox.set(0, 0, 0, 0);
-		
-		if(button == Buttons.LEFT && FatTransformer.currentTool == FatTransformer.TOOL.SELECTION){
-			Vector3 v = new Vector3(screenX, screenY,0f);
-			this.cam.unproject(v);
-			this.selectionRect.width = v.x-this.selectionRect.x;
-			this.selectionRect.height = v.y-this.selectionRect.y;
-			
-			float left = Math.min(this.selectionRect.x+this.selectionRect.width, this.selectionRect.x);
-			float bottom = Math.min(this.selectionRect.y+this.selectionRect.height, this.selectionRect.y);
-			float right = Math.max(this.selectionRect.x+this.selectionRect.width, this.selectionRect.x);
-			float top = Math.max(this.selectionRect.y+this.selectionRect.height, this.selectionRect.y);
-			this.selectionRect.set(left, bottom, right-left, top-bottom);
-			
-			this.selectFromRect();
-			
-			this.selectedObjects = this.gui.getSelectedObjects();
-			
-
-			this.centerOrigin.set(this.cam.viewportWidth/2, this.cam.viewportWidth/2);
-			
-			if(this.selectedObjects.size != 0)
-				this.centerOrigin.set(RectangleUtils.getOrigin(selectedObjects));
-			this.prevSize = this.selectedObjects.size;
-			
-			this.selectionRect.set(0f, 0f, 0f, 0f);
-			return true;
+		if(!this.prevClicked || this.gui.hasFocus()){
+			this.selectedObjects.clear();
+			return false;
 		}
 		
-		return false;
+		return true;
 	}
 
 	@Override
@@ -221,8 +206,14 @@ public class FatInputHandler implements InputProcessor {
 		Vector3 v = new Vector3(screenX, screenY,0f);
 		this.cam.unproject(v);
 		
+		if(this.clickedPoint != null){
+			this.clickedPoint.drag(v.x, v.y);
+			this.selectionBox.applyTransformPoints();
+		}
+		
 		if(this.dragOrigin){
-			this.centerOrigin.set(v.x + this.originDiffX, v.y + this.originDiffY);
+			this.selectionBox.setCenter(v.x + this.originDiffX, v.y + this.originDiffY);
+			this.selectionBox.updateCenter();
 			return true;
 		}
 		
@@ -234,24 +225,16 @@ public class FatInputHandler implements InputProcessor {
 			return true;
 		}
 		
-		if((!this.dragAble && !this.scaleAble && !this.rotateAble) || this.selectedObjects == null) return false;
+		if(!this.dragAble && !this.scaleAble && !this.rotateAble) return false;
 		if(this.selectedObjects.size == 0) return false;
-		if(this.dragAble) FatTransformer.translate(this.selectedObjects, v.x, v.y, true);
-		if(this.scaleAble) FatTransformer.scale(this.selectedObjects, v.x, v.y, true);
-		if(this.rotateAble){
-			FatTransformer.rotateRelative(this.selectedObjects, v.x,v.y, centerOrigin.x, centerOrigin.y, clickedAngle);
-		}
+		if(this.dragAble) FatTransformer.translate(this.selectionBox, v.x, v.y, true);
+		if(this.scaleAble) FatTransformer.scale(this.selectionBox, v.x, v.y, true);
+		if(this.rotateAble)	FatTransformer.rotateRelative(this.selectionBox, v.x,v.y);
 		return true;
 	}
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		if(this.cam.followMouse && !this.cam.isZoomOut()){
-			this.cam.setFollowSpeed(0.1f, 0.1f);
-			Vector3 v = new Vector3(screenX, screenY, 0f);
-			this.cam.unproject(v);
-			this.mover.setPosition(v.x, v.y);
-		}
 		return false;
 	}
 
@@ -277,21 +260,17 @@ public class FatInputHandler implements InputProcessor {
 	}
 	
 	public void setSelectedObjects(Array<FatMapObject> objects){
-		this.selectedObjects = objects;
+		this.selectedObjects.clear();
+		this.selectedObjects.addAll(objects);
 	}
 	
 	public void drawSelectRegion(ShapeRenderer renderer){
 		float alpha = 1f;
 		if(renderer.getCurrentType() == ShapeRenderer.ShapeType.Filled) alpha = .25f;
-		else if((this.rotateAble || Gdx.input.isButtonPressed(Buttons.RIGHT)) && this.selectedObjects != null){
-			if(this.selectedObjects.size != 0){
-				renderer.setColor(1f, .75f, .75f, 1f);
-				renderer.line(centerOrigin.x-5,centerOrigin.y, centerOrigin.x+5, centerOrigin.y);
-				renderer.line(centerOrigin.x,centerOrigin.y-5, centerOrigin.x, centerOrigin.y+5);
-			}
+		if(this.prevClicked){
+			renderer.setColor(1f, .75f, .75f, alpha);
+			renderer.rect(this.selectionRect.x, this.selectionRect.y, this.selectionRect.width, this.selectionRect.height);
 		}
-		renderer.setColor(1f, .75f, .75f, alpha);
-		renderer.rect(this.selectionRect.x, this.selectionRect.y, this.selectionRect.width, this.selectionRect.height);
 	}
 	
 	private void selectFromRect(){
